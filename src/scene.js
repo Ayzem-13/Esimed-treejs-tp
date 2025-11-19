@@ -24,6 +24,16 @@ export class Scene {
         const sun = new THREE.DirectionalLight(0xffffff, 1.5)
         sun.position.set(10, 20, 10)
         sun.target.position.set(0, 0, 0)
+        sun.castShadow = true
+        
+        sun.shadow.camera.left = -50
+        sun.shadow.camera.right = 50
+        sun.shadow.camera.top = 50
+        sun.shadow.camera.bottom = -50
+        
+        sun.shadow.mapSize.width = 2048
+        sun.shadow.mapSize.height = 2048
+        
         this.scene.add(sun)
 
         // direction du soleil repris sur la cible
@@ -36,6 +46,7 @@ export class Scene {
         const material = createStandardMaterial(texture, repeats)
         const plane = new THREE.Mesh(geometry, material)
         plane.rotation.x = -Math.PI / 2
+        plane.receiveShadow = true
         this.scene.add(plane)
     }
 

@@ -8,10 +8,12 @@ export class Application {
     constructor() {
         this.renderer = new THREE.WebGPURenderer({antialias: true})
         this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.renderer.shadowMap.enabled = true
         document.body.appendChild(this.renderer.domElement)
         
         this.sceneManager = new Scene()
         this.scene = this.sceneManager.scene
+
         // this.sceneManager.addCube()
         this.sceneManager.addAmbiantLight()
         this.sceneManager.addDirectionLight()
