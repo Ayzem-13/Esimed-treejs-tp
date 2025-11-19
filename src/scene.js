@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu'
-import { createStandardMaterial, loadGltf } from './tools.js'
+import { createStandardMaterial, loadGltf, textureloader } from './tools.js'
 
 export class Scene {
     constructor() {
@@ -70,6 +70,12 @@ export class Scene {
         } catch (error) {
             console.error('Erreur lors du chargement de la scène:', error)
         }
+    }
+
+    addSkybox(filename) {
+        const texture = textureloader.load(`/skybox/${filename}`)
+        texture.mapping = THREE.EquirectangularReflectionMapping
+        this.scene.background = texture
     }
     
 }

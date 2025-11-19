@@ -27,6 +27,8 @@ export class Application {
         this.sceneManager.addGround(this.groundParams.texture, this.groundParams.repeats)
         this.sceneManager.loadScene('/scenes/scene_1.json')
         
+        this.sceneManager.addSkybox(this.skyboxParams.file)
+
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
 
@@ -42,6 +44,16 @@ export class Application {
         this.groundParams = {
             texture: this.groundTextures[0],
             repeats: 1000
+        }
+
+        this.skyboxFiles = [
+            'DaySkyHDRI019A_2K-TONEMAPPED.jpg',
+            'DaySkyHDRI050A_2K-TONEMAPPED.jpg',
+            'NightSkyHDRI009_2K-TONEMAPPED.jpg'
+        ]
+
+        this.skyboxParams = {
+            file: this.skyboxFiles[1]
         }
     }
 
