@@ -40,7 +40,11 @@ export class Application {
         this.selectedObject = null
         this.selectedMesh = null
         this.selectedMeshMaterial = null
+        this.moveSelectedObject = false
+
         this.renderer.domElement.addEventListener('click', (event) => this.handleObjectSelection(event))
+        window.addEventListener('keydown', (event) => this.handleKeyPress(event))
+        document.addEventListener('mousemove', (event) => this.handleObjectMovement(event))
 
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
@@ -121,7 +125,31 @@ export class Application {
         this.selectedMesh = null
         this.selectedObject = null
         this.selectedMeshMaterial = null
+        this.moveSelectedObject = false
         this.ui.hideSelectionUI()
+    }
+
+    handleKeyPress(event) {
+        if (event.code === 'KeyG') {
+            this.moveSelectedObject = !this.moveSelectedObject
+        }
+    }
+
+    handleObjectMovement(event) {
+        if (this.moveSelectedObject && this.selectedObject != null) {
+            const rect = this.renderer.domElement.getBoundingClientRect()
+            const mouse = new THREE.Vector2(
+                ((event.clientX - rect.left) / rect.width) * 2 - 1,
+                -((event.clientY - rect.top) / rect.height) * 2 + 1
+            )
+            const raycaster = new THREE.Raycaster()
+            raycaster.setFromCamera(mouse, this.camera)
+            const intersects = raycaster.intersectObject(this.sceneManager.groundPlane, true)
+            if (intersects.length > 0) {
+                this.selectedObject.position.copy(intersects[0].point)
+                this.ui.updateSelectionUI(this.selectedObject)
+            }
+        }
     }
 
     render() {
