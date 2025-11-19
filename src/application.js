@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu'
 import { Camera } from './camera.js'
 import { Scene } from './scene.js'
 import { Control } from './control.js'
+import { UI } from './ui.js'
 
 export class Application {
     
@@ -20,7 +21,6 @@ export class Application {
         
         this.cameraManager = new Camera()
         this.camera = this.cameraManager.camera
-        
         this.controlManager = new Control(this.camera, this.renderer.domElement)
         
         this.initParmams()
@@ -28,6 +28,10 @@ export class Application {
         this.sceneManager.loadScene('/scenes/scene_1.json')
         
         this.sceneManager.addSkybox(this.skyboxParams.file)
+
+        this.ui = new UI()
+        this.ui.addSkyboxUI(this.skyboxFiles, this.skyboxParams, 
+        this.sceneManager.addSkybox.bind(this.sceneManager))
 
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
