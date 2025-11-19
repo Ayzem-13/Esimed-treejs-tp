@@ -60,4 +60,16 @@ export class UI {
         this.infoFolder.hide()
     }
 
+    addExportButton(exportCallback) {
+        this.gui.add({ export: exportCallback }, 'export').name('Export Scene')
+    }
+
+    addClearButton(clearCallback) {
+        this.gui.add({ clear: clearCallback }, 'clear').name('Clear Scene')
+    }
+
+    addImportButton(importCallback) {
+        this.gui.add({ import: importCallback }, 'import').name('Import Scene')
+    }
+
 }

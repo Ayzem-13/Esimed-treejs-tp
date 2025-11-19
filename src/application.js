@@ -5,28 +5,27 @@ import { Control } from './control.js'
 import { UI } from './ui.js'
 
 export class Application {
-    
+
     constructor() {
         this.renderer = new THREE.WebGPURenderer({antialias: true})
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.renderer.shadowMap.enabled = true
         document.body.appendChild(this.renderer.domElement)
-        
+
         this.sceneManager = new Scene()
         this.scene = this.sceneManager.scene
 
-        // this.sceneManager.addCube()
         this.sceneManager.addAmbiantLight()
         this.sceneManager.addDirectionLight()
-        
+
         this.cameraManager = new Camera()
         this.camera = this.cameraManager.camera
         this.controlManager = new Control(this.camera, this.renderer.domElement)
-        
+
         this.initParms()
         this.sceneManager.addGround(this.groundParams.texture, this.groundParams.repeats)
         this.sceneManager.loadScene('/scenes/scene_1.json')
-        
+
         this.sceneManager.addSkybox(this.skyboxParams.file)
 
         this.ui = new UI()
@@ -36,7 +35,10 @@ export class Application {
             this.sceneManager.changeGround.bind(this.sceneManager))
         this.ui.addSunUI(this.sceneManager.sun)
         this.ui.addSelectionUI()
-        
+        this.ui.addExportButton(() => this.exportScene())
+        this.ui.addClearButton(() => this.sceneManager.clearScene())
+        this.ui.addImportButton(() => this.importInput.click())
+
         this.selectedObject = null
         this.selectedMesh = null
         this.selectedMeshMaterial = null
@@ -45,6 +47,15 @@ export class Application {
         this.renderer.domElement.addEventListener('click', (event) => this.handleObjectSelection(event))
         window.addEventListener('keydown', (event) => this.handleKeyPress(event))
         document.addEventListener('mousemove', (event) => this.handleObjectMovement(event))
+
+        this.importInput = document.createElement('input')
+        this.importInput.type = 'file'
+        this.importInput.accept = '.json,application/json'
+        this.importInput.style.display = 'none'
+        document.body.appendChild(this.importInput)
+        this.importInput.addEventListener('change', async (event) => {
+            await this.handleImportScene(event)
+        })
 
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
@@ -150,6 +161,36 @@ export class Application {
                 this.ui.updateSelectionUI(this.selectedObject)
             }
         }
+    }
+
+    async handleImportScene(event) {
+        await this.sceneManager.importScene(event, {
+            skybox: this.skyboxParams,
+            ground: this.groundParams
+        })
+        this.sceneManager.addSkybox(this.skyboxParams.file)
+        this.sceneManager.changeGround(this.groundParams.texture, this.groundParams.repeats)
+        this.importInput.value = ''
+    }
+
+    exportScene() {
+        const params = {
+            skybox: this.skyboxParams,
+            ground: this.groundParams
+        }
+
+        const exportData = this.sceneManager.exportScene(params)
+
+        const jsonStr = JSON.stringify(exportData, null, 2)
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'scene_export.json'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
     }
 
     render() {
