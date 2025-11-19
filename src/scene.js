@@ -70,6 +70,15 @@ export class Scene {
                     model.quaternion.fromArray(node.rotation.split(',').map(Number))
                     model.scale.fromArray(node.scale.split(',').map(Number))
                     
+                    model.traverse(o => {
+                        if (o.isMesh) {
+                            o.userData = {
+                                isSelectable: true,
+                                object: model,
+                            }
+                        }
+                    })
+                    
                     this.scene.add(model)
                 }
             }

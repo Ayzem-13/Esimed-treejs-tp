@@ -23,7 +23,7 @@ export class Application {
         this.camera = this.cameraManager.camera
         this.controlManager = new Control(this.camera, this.renderer.domElement)
         
-        this.initParmams()
+        this.initParms()
         this.sceneManager.addGround(this.groundParams.texture, this.groundParams.repeats)
         this.sceneManager.loadScene('/scenes/scene_1.json')
         
@@ -35,11 +35,16 @@ export class Application {
         this.ui.addGroundUI(this.groundTextures, this.groundParams,
             this.sceneManager.changeGround.bind(this.sceneManager))
         this.ui.addSunUI(this.sceneManager.sun)
+        
+        this.selectedObject = null
+        this.selectedMesh = null
+        this.selectedMeshMaterial = null
+        this.renderer.domElement.addEventListener('click', (event) => this.handleObjectSelection(event))
 
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
 
-    initParmams() {
+    initParms() {
         this.groundTextures = [
             'aerial_grass_rock',
             'brown_mud_leaves_01',
@@ -69,6 +74,50 @@ export class Application {
             x: 10,
             z: 10,
         }
+    }
+
+    handleObjectSelection(event) {
+        const rect = this.renderer.domElement.getBoundingClientRect()
+        const mouse = this.getMouseCoordinates(event, rect)
+        const raycaster = new THREE.Raycaster()
+        raycaster.setFromCamera(mouse, this.camera)
+        const intersects = raycaster.intersectObjects(this.scene.children, true)
+        
+        if (intersects.length > 0) {
+            this.selectObject(intersects)
+        } else {
+            this.deselectObject()
+        }
+    }
+
+    getMouseCoordinates(event, rect) {
+        return new THREE.Vector2(
+            ((event.clientX - rect.left) / rect.width) * 2 - 1,
+            -((event.clientY - rect.top) / rect.height) * 2 + 1
+        )
+    }
+
+    selectObject(intersects) {
+        for (let i = 0; i < intersects.length; i++) {
+            if (intersects[i].object.userData.isSelectable) {
+                this.deselectObject()
+                
+                this.selectedMesh = intersects[i].object
+                this.selectedObject = this.selectedMesh.userData.object
+                this.selectedMeshMaterial = this.selectedMesh.material
+                this.selectedMesh.material = new THREE.MeshStandardMaterial({ color: 0xffff00 })
+                break
+            }
+        }
+    }
+
+    deselectObject() {
+        if (this.selectedMesh) {
+            this.selectedMesh.material = this.selectedMeshMaterial
+        }
+        this.selectedMesh = null
+        this.selectedObject = null
+        this.selectedMeshMaterial = null
     }
 
     render() {
