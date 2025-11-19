@@ -30,11 +30,12 @@ export class Application {
         this.sceneManager.addSkybox(this.skyboxParams.file)
 
         this.ui = new UI()
-        this.ui.addSkyboxUI(this.skyboxFiles, this.skyboxParams, 
+        this.ui.addSkyboxUI(this.skyboxFiles, this.skyboxParams,
             this.sceneManager.addSkybox.bind(this.sceneManager))
         this.ui.addGroundUI(this.groundTextures, this.groundParams,
             this.sceneManager.changeGround.bind(this.sceneManager))
         this.ui.addSunUI(this.sceneManager.sun)
+        this.ui.addSelectionUI()
         
         this.selectedObject = null
         this.selectedMesh = null
@@ -101,11 +102,13 @@ export class Application {
         for (let i = 0; i < intersects.length; i++) {
             if (intersects[i].object.userData.isSelectable) {
                 this.deselectObject()
-                
+
                 this.selectedMesh = intersects[i].object
                 this.selectedObject = this.selectedMesh.userData.object
                 this.selectedMeshMaterial = this.selectedMesh.material
                 this.selectedMesh.material = new THREE.MeshStandardMaterial({ color: 0xffff00 })
+
+                this.ui.updateSelectionUI(this.selectedObject)
                 break
             }
         }
@@ -118,6 +121,7 @@ export class Application {
         this.selectedMesh = null
         this.selectedObject = null
         this.selectedMeshMaterial = null
+        this.ui.hideSelectionUI()
     }
 
     render() {

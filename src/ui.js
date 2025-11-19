@@ -29,4 +29,35 @@ export class UI {
         folder.add(sun.position, 'z', -100, 100)
     }
 
+    addSelectionUI() {
+        this.infoFolder = this.gui.addFolder('Selected')
+        this.infoMessages = {
+            name: '',
+            position: '',
+            rotation: '',
+            scale: '',
+        }
+        this.infoName = this.infoFolder.add(this.infoMessages, 'name')
+        this.infoPos = this.infoFolder.add(this.infoMessages, 'position').name('position')
+        this.infoRot = this.infoFolder.add(this.infoMessages, 'rotation').name('rotation')
+        this.infoScale = this.infoFolder.add(this.infoMessages, 'scale').name('scale')
+        this.hideSelectionUI()
+    }
+
+    updateSelectionUI(selectedObject) {
+        this.infoMessages.name = selectedObject.name
+        this.infoMessages.position = `${selectedObject.position.x.toFixed(2)}, ${selectedObject.position.y.toFixed(2)}, ${selectedObject.position.z.toFixed(2)}`
+        this.infoMessages.rotation = `${selectedObject.rotation.x.toFixed(2)}, ${selectedObject.rotation.y.toFixed(2)}, ${selectedObject.rotation.z.toFixed(2)}`
+        this.infoMessages.scale = `${selectedObject.scale.x.toFixed(2)}, ${selectedObject.scale.y.toFixed(2)}, ${selectedObject.scale.z.toFixed(2)}`
+        this.infoName.updateDisplay()
+        this.infoPos.updateDisplay()
+        this.infoRot.updateDisplay()
+        this.infoScale.updateDisplay()
+        this.infoFolder.show()
+    }
+
+    hideSelectionUI() {
+        this.infoFolder.hide()
+    }
+
 }
