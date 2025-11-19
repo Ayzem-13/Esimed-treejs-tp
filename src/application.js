@@ -31,7 +31,10 @@ export class Application {
 
         this.ui = new UI()
         this.ui.addSkyboxUI(this.skyboxFiles, this.skyboxParams, 
-        this.sceneManager.addSkybox.bind(this.sceneManager))
+            this.sceneManager.addSkybox.bind(this.sceneManager))
+        this.ui.addGroundUI(this.groundTextures, this.groundParams,
+            this.sceneManager.changeGround.bind(this.sceneManager))
+        this.ui.addSunUI(this.sceneManager.sun)
 
         this.renderer.setAnimationLoop(this.render.bind(this))
     }
@@ -47,7 +50,7 @@ export class Application {
 
         this.groundParams = {
             texture: this.groundTextures[0],
-            repeats: 1000
+            repeats: 140
         }
 
         this.skyboxFiles = [
@@ -58,6 +61,13 @@ export class Application {
 
         this.skyboxParams = {
             file: this.skyboxFiles[1]
+        }
+
+        this.sunParams = {
+            color: '#ffffff',
+            intensity: 1.5,
+            x: 10,
+            z: 10,
         }
     }
 

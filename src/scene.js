@@ -21,23 +21,23 @@ export class Scene {
     }
 
     addDirectionLight() {
-        const sun = new THREE.DirectionalLight(0xffffff, 1.5)
-        sun.position.set(10, 20, 10)
-        sun.target.position.set(0, 0, 0)
-        sun.castShadow = true
+        this.sun = new THREE.DirectionalLight(0xffffff, 1.5)
+        this.sun.position.set(10, 20, 10)
+        this.sun.target.position.set(0, 0, 0)
+        this.sun.castShadow = true
         
-        sun.shadow.camera.left = -50
-        sun.shadow.camera.right = 50
-        sun.shadow.camera.top = 50
-        sun.shadow.camera.bottom = -50
+        this.sun.shadow.camera.left = -50
+        this.sun.shadow.camera.right = 50
+        this.sun.shadow.camera.top = 50
+        this.sun.shadow.camera.bottom = -50
         
-        sun.shadow.mapSize.width = 2048
-        sun.shadow.mapSize.height = 2048
+        this.sun.shadow.mapSize.width = 2048
+        this.sun.shadow.mapSize.height = 2048
         
-        this.scene.add(sun)
+        this.scene.add(this.sun)
 
         // direction du soleil repris sur la cible
-        const sunHelper = new THREE.DirectionalLightHelper(sun, 5)
+        const sunHelper = new THREE.DirectionalLightHelper(this.sun, 5)
         this.scene.add(sunHelper)
     }
 
@@ -47,7 +47,13 @@ export class Scene {
         const plane = new THREE.Mesh(geometry, material)
         plane.rotation.x = -Math.PI / 2
         plane.receiveShadow = true
+        this.groundPlane = plane
         this.scene.add(plane)
+    }
+
+    changeGround(texture, repeats) {
+        const newMaterial = createStandardMaterial(texture, repeats)
+        this.groundPlane.material = newMaterial
     }
 
     async loadScene(url) {
