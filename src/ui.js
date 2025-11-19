@@ -4,6 +4,7 @@ import { ColorGUIHelper } from './tools'
 export class UI {
     constructor() {
         this.gui = new GUI({ title: 'Controls' })
+        this.controlsFolder = this.gui.addFolder('Controls')
 	}
 
     addSkyboxUI(files, params, onChange) {
@@ -41,6 +42,15 @@ export class UI {
         this.infoPos = this.infoFolder.add(this.infoMessages, 'position').name('position')
         this.infoRot = this.infoFolder.add(this.infoMessages, 'rotation').name('rotation')
         this.infoScale = this.infoFolder.add(this.infoMessages, 'scale').name('scale')
+
+        // Edit controls for rotation and scale
+        this.editFolder = this.infoFolder.addFolder('Edit')
+        this.editParams = {
+            rotationY: 0,
+            scale: 1,
+        }
+        this.editFolder.add(this.editParams, 'rotationY', 0, Math.PI * 2, 0.01).name('Rotation Y')
+        this.editFolder.add(this.editParams, 'scale', 0.1, 5, 0.1).name('Scale')
         this.hideSelectionUI()
     }
 
@@ -53,6 +63,11 @@ export class UI {
         this.infoPos.updateDisplay()
         this.infoRot.updateDisplay()
         this.infoScale.updateDisplay()
+
+        // Update edit controls to match current object state
+        this.editParams.rotationY = selectedObject.rotation.y
+        this.editParams.scale = selectedObject.scale.x
+
         this.infoFolder.show()
     }
 
@@ -70,6 +85,33 @@ export class UI {
 
     addImportButton(importCallback) {
         this.gui.add({ import: importCallback }, 'import').name('Import Scene')
+    }
+
+    addWASDUI(wasdParams, onChange) {
+        this.controlsFolder.add(wasdParams, 'enabled').name('WASD Mode')
+            .onChange(onChange)
+    }
+
+    setupEditCallbacks(onRotationYChange, onScaleChange) {
+
+        const rotationYController = this.editFolder.controllers.find(c => c.property === 'rotationY')
+        const scaleController = this.editFolder.controllers.find(c => c.property === 'scale')
+
+        if (rotationYController) {
+            rotationYController.onChange(onRotationYChange)
+        }
+        if (scaleController) {
+            scaleController.onChange(onScaleChange)
+        }
+    }
+
+    addEditSceneUI(onDelete, onAdd, modelNames) {
+        const editSceneFolder = this.gui.addFolder('Scene Edit')
+        editSceneFolder.add({ delete: onDelete }, 'delete').name('Delete Selected')
+
+        const addParams = { model: modelNames[0] }
+        editSceneFolder.add(addParams, 'model', modelNames).name('Add Model')
+            .onChange((value) => onAdd(value))
     }
 
 }

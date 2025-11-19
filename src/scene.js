@@ -5,6 +5,7 @@ export class Scene {
     constructor() {
         this.scene = new THREE.Scene()
         this.models = {}
+        this.objects = []
     }
 
     addCube() {
@@ -159,4 +160,28 @@ export class Scene {
         }
     }
 
+    async loadModel(modelName, position) {
+        const model = await loadGltf(modelName)
+        model.position.copy(position)
+        model.traverse(o => {
+            if (o.isMesh) {
+                o.userData = { isSelectable: true, object: model }
+            }
+        })
+        this.scene.add(model)
+    }
+
+    deleteObject(object) {
+        if (object) {
+            this.scene.remove(object)
+        }
+    }
+
+    getAvailableModels() {
+        return ['birch1', 'bush1', 'bush2', 'flowers1', 'grass1', 'log1', 'oak1', 'oak2', 'oak3', 'pine1', 'spruce1', 'stone1', 'stone2', 'stump1']
+    }
+
+    addNewObject(modelName) {
+        this.loadModel(modelName, new THREE.Vector3(0, 0, 0))
+    }
 }

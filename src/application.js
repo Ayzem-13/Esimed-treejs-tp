@@ -35,6 +35,24 @@ export class Application {
             this.sceneManager.changeGround.bind(this.sceneManager))
         this.ui.addSunUI(this.sceneManager.sun)
         this.ui.addSelectionUI()
+
+        this.wasdParams = { enabled: false }
+        this.ui.addWASDUI(this.wasdParams, (value) => this.setWASDMode(value))
+
+        // Setup edit callbacks for object properties
+        this.ui.setupEditCallbacks(
+            (value) => this.updateObjectRotationY(value),
+            (value) => this.updateObjectScale(value)
+        )
+
+        // Get available models and add scene edit UI
+        this.modelNames = this.sceneManager.getAvailableModels()
+        this.ui.addEditSceneUI(
+            () => this.deleteSelectedObject(),
+            (modelName) => this.sceneManager.addNewObject(modelName),
+            this.modelNames
+        )
+
         this.ui.addExportButton(() => this.exportScene())
         this.ui.addClearButton(() => this.sceneManager.clearScene())
         this.ui.addImportButton(() => this.importInput.click())
@@ -46,7 +64,7 @@ export class Application {
 
         this.renderer.domElement.addEventListener('click', (event) => this.handleObjectSelection(event))
         window.addEventListener('keydown', (event) => this.handleKeyPress(event))
-        document.addEventListener('mousemove', (event) => this.handleObjectMovement(event))
+        document.addEventListener('mousemove', (event) => this.handleMouseMove(event))
 
         this.importInput = document.createElement('input')
         this.importInput.type = 'file'
@@ -98,7 +116,7 @@ export class Application {
         const raycaster = new THREE.Raycaster()
         raycaster.setFromCamera(mouse, this.camera)
         const intersects = raycaster.intersectObjects(this.scene.children, true)
-        
+
         if (intersects.length > 0) {
             this.selectObject(intersects)
         } else {
@@ -140,13 +158,24 @@ export class Application {
         this.ui.hideSelectionUI()
     }
 
+    setWASDMode(enabled) {
+        this.controlManager.setWASDMode(enabled)
+
+        if (enabled) {
+            this.deselectObject()
+        }
+    }
+
     handleKeyPress(event) {
-        if (event.code === 'KeyG') {
+        const key = event.key.toLowerCase()
+
+        if (key === 'g' && !this.controlManager.wasdModeEnabled) {
             this.moveSelectedObject = !this.moveSelectedObject
         }
     }
 
-    handleObjectMovement(event) {
+    handleMouseMove(event) {
+        // Object movement (when G is pressed)
         if (this.moveSelectedObject && this.selectedObject != null) {
             const rect = this.renderer.domElement.getBoundingClientRect()
             const mouse = new THREE.Vector2(
@@ -160,6 +189,27 @@ export class Application {
                 this.selectedObject.position.copy(intersects[0].point)
                 this.ui.updateSelectionUI(this.selectedObject)
             }
+        }
+    }
+
+    updateObjectRotationY(value) {
+        if (this.selectedObject) {
+            this.selectedObject.rotation.y = value
+            this.ui.updateSelectionUI(this.selectedObject)
+        }
+    }
+
+    updateObjectScale(value) {
+        if (this.selectedObject) {
+            this.selectedObject.scale.set(value, value, value)
+            this.ui.updateSelectionUI(this.selectedObject)
+        }
+    }
+
+    deleteSelectedObject() {
+        if (this.selectedObject) {
+            this.sceneManager.deleteObject(this.selectedObject)
+            this.deselectObject()
         }
     }
 
@@ -194,7 +244,7 @@ export class Application {
     }
 
     render() {
-        this.controlManager.update()
+        this.controlManager.handleWASDMovement()
         this.renderer.render(this.scene, this.camera)
     }
 
