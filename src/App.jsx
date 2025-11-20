@@ -7,17 +7,29 @@ import { useScene } from './context/SceneContext';
 
 function AppContent() {
   const [showStartMenu, setShowStartMenu] = useState(true);
-  const { setMenuClosed, isLoading } = useScene();
+  const { setMenuClosed, isLoading, gameMode, setGameMode } = useScene();
 
-  const handleStartClick = () => {
+  const handleStartCharacter = () => {
     setShowStartMenu(false);
     setMenuClosed(true);
+    setGameMode('character');
+  };
+
+  const handleStartEditor = () => {
+    setShowStartMenu(false);
+    setMenuClosed(true);
+    setGameMode('editor');
   };
 
   return (
     <main className="relative w-full h-screen overflow-hidden">
       <CanvasContainer />
-      {showStartMenu && <StartMenu onStart={handleStartClick} />}
+      {showStartMenu && (
+        <StartMenu
+          onStartCharacter={handleStartCharacter}
+          onStartEditor={handleStartEditor}
+        />
+      )}
       <LoadingScreen isLoading={isLoading} />
     </main>
   );

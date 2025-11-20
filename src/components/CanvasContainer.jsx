@@ -5,13 +5,13 @@ import { useScene } from '../context/SceneContext';
 export function CanvasContainer() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
-  const { setAppInstance, menuClosed, setIsLoading } = useScene();
+  const { setAppInstance, menuClosed, setIsLoading, gameMode } = useScene();
 
   useEffect(() => {
-    if (menuClosed && containerRef.current && !appRef.current) {
+    if (menuClosed && containerRef.current && !appRef.current && gameMode) {
       setIsLoading(true);
-      
-      appRef.current = new Application(containerRef.current);
+
+      appRef.current = new Application(containerRef.current, gameMode);
       setAppInstance(appRef.current);
 
       const timer = setTimeout(() => {
@@ -20,7 +20,7 @@ export function CanvasContainer() {
 
       return () => clearTimeout(timer);
     }
-  }, [menuClosed, setAppInstance, setIsLoading]);
+  }, [menuClosed, gameMode, setAppInstance, setIsLoading]);
 
   useEffect(() => {
     return () => {

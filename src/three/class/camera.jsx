@@ -93,8 +93,9 @@ export class Camera {
                 -Math.cos(this.yaw) * Math.cos(this.pitch)
             ).normalize();
             this.camera.lookAt(this.camera.position.clone().add(lookDir))
+        } else if (this.controls.enabled) {
+            this.controls.update()
         }
-        this.controls.update()
     }
 
     defaultPosition() {

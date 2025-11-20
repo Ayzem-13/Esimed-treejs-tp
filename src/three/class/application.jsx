@@ -2,11 +2,13 @@ import * as THREE from 'three/webgpu'
 import { Scene } from './scene'
 import { UI } from './ui'
 import { Camera } from './camera'
+import { CharacterController } from '../characters/characterController'
 
 export class Application {
-    
-    constructor(container = document.body) {
+
+    constructor(container = document.body, gameMode = 'editor') {
         this.container = container
+        this.gameMode = gameMode 
         this.initParams();
         this.renderer = new THREE.WebGPURenderer({antialias: true})
         this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -48,11 +50,17 @@ export class Application {
         this.ui.addGroundUI(this.groundTextures, this.groundParams, this.scene.changeGround.bind(this.scene))
         this.ui.addSunUI(this.scene.sun)
 
+        this.character = null
+        if (this.gameMode === 'character') {
+            this.initCharacter()
+        }
+
         this.selectedObject = null
         this.selectedMesh = null
         this.selectedMeshMaterial = null
 
-        // Bind event handlers
+        this.clock = new THREE.Clock()
+
         this.handleClick = this.handleClick.bind(this)
         this.handleKeyDown = this.handleKeyDown.bind(this)
         this.handleMouseMove = this.handleMouseMove.bind(this)
@@ -115,6 +123,20 @@ export class Application {
         }
     }
 
+    initCharacter() {
+        const spawnPosition = new THREE.Vector3(0, 1, 5)
+        this.character = new CharacterController(
+            this.scene.scene,
+            this.camera.camera,
+            spawnPosition
+        )
+        this.camera.controls.enabled = false
+
+        if (this.ui && this.ui.gui) {
+            this.ui.gui.domElement.style.display = 'none'
+        }
+    }
+
     initParams() {
         this.groundTextures = [
             'aerial_grass_rock',
@@ -141,6 +163,10 @@ export class Application {
     }
 
     render() {
+        const deltaTime = this.clock.getDelta()
+        if (this.character) {
+            this.character.update(deltaTime)
+        }
         this.camera.process(this.globalParams)
         this.sunHelper.update()
         this.renderer.render(this.scene.scene, this.camera.camera)
@@ -149,7 +175,11 @@ export class Application {
     dispose() {
         this.renderer.setAnimationLoop(null)
         this.renderer.dispose()
-        
+
+        if (this.character) {
+            this.character.dispose()
+        }
+
         if (this.camera) {
             this.camera.dispose()
         }
@@ -163,11 +193,11 @@ export class Application {
         }
         window.removeEventListener('keydown', this.handleKeyDown)
         document.removeEventListener('mousemove', this.handleMouseMove)
-        
+
         if (this.renderer.domElement && this.renderer.domElement.parentNode) {
             this.renderer.domElement.parentNode.removeChild(this.renderer.domElement)
         }
-        
+
         if (this.importInput && this.importInput.parentNode) {
             this.importInput.parentNode.removeChild(this.importInput)
         }
