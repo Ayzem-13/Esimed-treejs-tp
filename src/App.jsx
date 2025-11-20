@@ -1,11 +1,14 @@
 import React from 'react';
-import { ThreeJsCanvas } from './ThreeJsCanvas';
+import { SceneProvider } from './context/SceneContext';
+import { CanvasContainer } from './components/CanvasContainer';
 
 function App() {
   return (
-    <div className="app-container">
-      <ThreeJsCanvas />
-    </div>
+    <SceneProvider>
+      <main className="relative w-full h-screen overflow-hidden">
+        <CanvasContainer />
+      </main>
+    </SceneProvider>
   );
 }
 

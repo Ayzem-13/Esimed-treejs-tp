@@ -150,6 +150,10 @@ export class Application {
         this.renderer.setAnimationLoop(null)
         this.renderer.dispose()
         
+        if (this.camera) {
+            this.camera.dispose()
+        }
+
         if (this.ui && this.ui.gui) {
             this.ui.gui.destroy()
         }

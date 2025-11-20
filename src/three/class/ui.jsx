@@ -1,5 +1,5 @@
 import GUI from 'lil-gui'
-import { ColorGUIHelper } from './tools'
+import { ColorGUIHelper } from '../tools'
 
 export class UI {
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu'
-import { createStandardMaterial, loadGltf, textureloader } from './tools'
+import { createStandardMaterial, loadGltf, textureloader } from '../tools'
 
 export class Scene {
 
