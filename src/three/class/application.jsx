@@ -3,6 +3,7 @@ import { Scene } from './scene'
 import { UI } from './ui'
 import { Camera } from './camera'
 import { CharacterController } from '../characters/characterController'
+import { VehicleController } from '../vehicles/vehicleController'
 
 export class Application {
 
@@ -130,6 +131,11 @@ export class Application {
             this.camera.camera,
             spawnPosition
         )
+
+        const vehiclePosition = new THREE.Vector3(10, 1.2, 5)
+        this.vehicle = new VehicleController(this.scene.scene, vehiclePosition)
+        this.character.setVehicle(this.vehicle)
+
         this.camera.controls.enabled = false
         this.globalParams.useWASD = true
 
@@ -167,6 +173,9 @@ export class Application {
         const deltaTime = this.clock.getDelta()
         if (this.character) {
             this.character.update(deltaTime)
+        }
+        if (this.vehicle) {
+            this.vehicle.update(deltaTime)
         }
         this.camera.process(this.globalParams)
         this.sunHelper.update()

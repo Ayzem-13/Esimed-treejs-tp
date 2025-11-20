@@ -20,6 +20,8 @@ export class Scene {
         this.sun.shadow.camera.near = 1
         this.sun.shadow.camera.far = 200
         this.sun.shadow.mapSize.set(2048, 2048)
+        this.sun.shadow.bias = -0.0001
+        this.sun.shadow.normalBias = 0.02
         this.scene.add(this.sun)
         this.sunHelper = new THREE.DirectionalLightHelper(this.sun)
         this.scene.add(this.sunHelper)

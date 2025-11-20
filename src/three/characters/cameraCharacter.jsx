@@ -37,8 +37,7 @@ export class CameraCharacter {
             this.isMouseCaptured = document.pointerLockElement === document.body
         })
 
-        // Zoom/Dézoom avec la molette de la souris
-        document.addEventListener('wheel', (e) => this.handleWheel(e))
+        document.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
     }
 
     handleMouseMove(event) {
@@ -51,11 +50,9 @@ export class CameraCharacter {
         this.pitchVelocity = Math.max(-maxPitchVel, Math.min(maxPitchVel, this.pitchVelocity))
     }
 
-    // Gérer le zoom avec la molette
     handleWheel(event) {
         event.preventDefault()
 
-        // Ajuster la distance avec la molette
         const zoomSpeed = 1
         this.distance += event.deltaY * 0.01 * zoomSpeed
 
@@ -80,12 +77,17 @@ export class CameraCharacter {
 
         this.updateRotation()
 
-        const charPos = this.character.body.position
+        let targetPos
+        if (this.character.inVehicle && this.character.vehicle) {
+            targetPos = this.character.vehicle.position.clone()
+        } else {
+            targetPos = this.character.body.position.clone()
+        }
 
         const horizontalDistance = this.distance * Math.cos(this.pitch)
-        const cameraX = charPos.x - Math.sin(this.yaw) * horizontalDistance
-        const cameraY = charPos.y + this.height - Math.sin(this.pitch) * this.distance
-        const cameraZ = charPos.z - Math.cos(this.yaw) * horizontalDistance
+        const cameraX = targetPos.x - Math.sin(this.yaw) * horizontalDistance
+        const cameraY = targetPos.y + this.height - Math.sin(this.pitch) * this.distance
+        const cameraZ = targetPos.z - Math.cos(this.yaw) * horizontalDistance
 
         const targetCameraPos = new THREE.Vector3(cameraX, cameraY, cameraZ)
 
@@ -93,7 +95,7 @@ export class CameraCharacter {
         const lerpFactor = Math.min(1.0, cameraSpeed * (1/60))
         this.camera.position.lerp(targetCameraPos, lerpFactor)
 
-        const lookAtPoint = charPos.clone()
+        const lookAtPoint = targetPos.clone()
         lookAtPoint.y += 1.2
 
         this.camera.lookAt(lookAtPoint)
