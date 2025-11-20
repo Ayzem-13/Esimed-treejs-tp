@@ -34,12 +34,6 @@ export class CameraCharacter {
         document.addEventListener('pointerlockchange', () => {
             this.isMouseCaptured = document.pointerLockElement === document.body
         })
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Escape' && this.isMouseCaptured) {
-                document.exitPointerLock()
-            }
-        })
     }
 
     handleMouseMove(event) {

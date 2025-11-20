@@ -5,7 +5,7 @@ import { useScene } from '../context/SceneContext';
 export function CanvasContainer() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
-  const { setAppInstance, menuClosed, setIsLoading, gameMode } = useScene();
+  const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused } = useScene();
 
   useEffect(() => {
     if (menuClosed && containerRef.current && !appRef.current && gameMode) {
@@ -21,6 +21,15 @@ export function CanvasContainer() {
       return () => clearTimeout(timer);
     }
   }, [menuClosed, gameMode, setAppInstance, setIsLoading]);
+
+  useEffect(() => {
+    if (appRef.current) {
+      appRef.current.isPaused = isPaused;
+      if (isPaused && document.pointerLockElement) {
+        document.exitPointerLock();
+      }
+    }
+  }, [isPaused]);
 
   useEffect(() => {
     return () => {

@@ -62,7 +62,7 @@ export class Camera {
     }
 
     handleMouseClick() {
-        if (this.params.useWASD) {
+        if (this.params.useWASD && !this.params.isPaused) {
             this.renderer.domElement.requestPointerLock()
         }
     }

@@ -131,6 +131,7 @@ export class Application {
             spawnPosition
         )
         this.camera.controls.enabled = false
+        this.globalParams.useWASD = true
 
         if (this.ui && this.ui.gui) {
             this.ui.gui.domElement.style.display = 'none'

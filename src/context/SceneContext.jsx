@@ -9,6 +9,7 @@ export const SceneProvider = ({ children }) => {
     const [menuClosed, setMenuClosed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [gameMode, setGameMode] = useState(null); // 'character' or 'editor'
+    const [isPaused, setIsPaused] = useState(false);
 
     return (
         <SceneContext.Provider value={{
@@ -19,7 +20,9 @@ export const SceneProvider = ({ children }) => {
             isLoading,
             setIsLoading,
             gameMode,
-            setGameMode
+            setGameMode,
+            isPaused,
+            setIsPaused
         }}>
             {children}
         </SceneContext.Provider>
