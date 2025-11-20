@@ -9,8 +9,8 @@ export class Scene {
     }
 
     addDirectionalLight() {
-        this.sun = new THREE.DirectionalLight(0xFFFFFF, 3.0)
-        this.sun.position.set(50, 100, 0)
+        this.sun = new THREE.DirectionalLight(0xFFFFFF, 2.5)
+        this.sun.position.set(50, 100, 30)
         this.sun.target.position.set(0, 0, 0)
         this.sun.castShadow = true
         this.sun.shadow.camera.left = -100
@@ -19,9 +19,10 @@ export class Scene {
         this.sun.shadow.camera.bottom = -100
         this.sun.shadow.camera.near = 1
         this.sun.shadow.camera.far = 200
-        this.sun.shadow.mapSize.set(2048, 2048)
-        this.sun.shadow.bias = -0.0001
-        this.sun.shadow.normalBias = 0.02
+        this.sun.shadow.mapSize.set(4096, 4096) 
+        this.sun.shadow.bias = -0.00005
+        this.sun.shadow.normalBias = 0.03
+
         this.scene.add(this.sun)
         this.sunHelper = new THREE.DirectionalLightHelper(this.sun)
         this.scene.add(this.sunHelper)
@@ -29,7 +30,7 @@ export class Scene {
     }
 
     addAmbiantLight() {
-        const ambient = new THREE.AmbientLight(0xFFFFFF, .025)
+        const ambient = new THREE.AmbientLight(0xFFFFFF, 0.4)
         this.scene.add(ambient)
     }
 

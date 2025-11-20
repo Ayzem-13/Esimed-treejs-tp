@@ -5,7 +5,16 @@ import { useScene } from '../context/SceneContext';
 export function CanvasContainer() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
-  const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused } = useScene();
+  const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused, shouldReset, setShouldReset } = useScene();
+
+  useEffect(() => {
+    if (shouldReset && appRef.current) {
+      appRef.current.dispose();
+      appRef.current = null;
+      setAppInstance(null);
+      setShouldReset(false);
+    }
+  }, [shouldReset, setShouldReset, setAppInstance]);
 
   useEffect(() => {
     if (menuClosed && containerRef.current && !appRef.current && gameMode) {

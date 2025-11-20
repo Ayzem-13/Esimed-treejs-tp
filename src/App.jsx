@@ -8,7 +8,7 @@ import { useScene } from './context/SceneContext';
 
 function AppContent() {
   const [showStartMenu, setShowStartMenu] = useState(true);
-  const { setMenuClosed, isLoading, gameMode, setGameMode, isPaused, setIsPaused, appInstance } = useScene();
+  const { setMenuClosed, isLoading, gameMode, setGameMode, isPaused, setIsPaused, appInstance, shouldReset, setShouldReset } = useScene();
 
   const handleStartCharacter = () => {
     setShowStartMenu(false);
@@ -30,9 +30,16 @@ function AppContent() {
     if (document.pointerLockElement) {
       document.exitPointerLock();
     }
+    document.body.style.cursor = 'auto';
+
+    if (appInstance) {
+      appInstance.dispose();
+    }
+    setShouldReset(true);
     setIsPaused(false);
     setShowStartMenu(true);
     setMenuClosed(false);
+    setGameMode(null);
   };
 
   useEffect(() => {
