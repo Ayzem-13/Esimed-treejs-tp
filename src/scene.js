@@ -1,187 +1,167 @@
 import * as THREE from 'three/webgpu'
-import { createStandardMaterial, loadGltf, textureloader } from './tools.js'
+import { createStandardMaterial, loadGltf, textureloader } from './tools'
 
 export class Scene {
+
     constructor() {
+        this.loadedObjects = {}
         this.scene = new THREE.Scene()
-        this.models = {}
-        this.objects = []
+    }
+
+    addDirectionalLight() {
+        this.sun = new THREE.DirectionalLight(0xFFFFFF, 3.0)
+        this.sun.position.set(50, 100, 0)
+        this.sun.target.position.set(0, 0, 0)
+        this.sun.castShadow = true
+        this.sun.shadow.camera.left = -100
+        this.sun.shadow.camera.right = 100
+        this.sun.shadow.camera.top = 100
+        this.sun.shadow.camera.bottom = -100
+        this.sun.shadow.camera.near = 1
+        this.sun.shadow.camera.far = 200
+        this.sun.shadow.mapSize.set(2048, 2048)
+        this.scene.add(this.sun)
+        this.sunHelper = new THREE.DirectionalLightHelper(this.sun)
+        this.scene.add(this.sunHelper)
+        return this.sunHelper
+    }
+
+    addAmbiantLight() {
+        const ambient = new THREE.AmbientLight(0xFFFFFF, .025)
+        this.scene.add(ambient)
+    }
+
+    addGround(texture, repeats) {
+        const planeSize = 5000
+        const planeMatPBR = createStandardMaterial(texture, repeats)
+        const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
+        planeGeo.setAttribute('uv2', new THREE.BufferAttribute(planeGeo.attributes.uv.array, 2))
+
+        this.ground = new THREE.Mesh(planeGeo, planeMatPBR)
+        this.ground.rotation.x = Math.PI * -.5
+        this.ground.receiveShadow = true
+
+        this.scene.add(this.ground)
+    }
+
+    changeGround(texture, repeats) {
+        this.ground.material  = createStandardMaterial(texture, repeats)
     }
 
     addCube() {
         const geometry = new THREE.BoxGeometry(1, 1, 1)
-        const material = new THREE.MeshPhongMaterial({ color: 0xff0000, flatShading: true })
+        const material = new THREE.MeshPhongMaterial({
+            color: 0xFF0000,  
+            flatShading: true,
+        })
         const cube = new THREE.Mesh(geometry, material)
-        cube.position.y = 1
+        cube.castShadow = true
+        cube.position.y = 1.0
         this.scene.add(cube)
     }
 
-    addAmbiantLight() {
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
-        this.scene.add(ambientLight)
-    }
-
-    addDirectionLight() {
-        this.sun = new THREE.DirectionalLight(0xffffff, 1.5)
-        this.sun.position.set(10, 20, 10)
-        this.sun.target.position.set(0, 0, 0)
-        this.sun.castShadow = true
-        
-        this.sun.shadow.camera.left = -50
-        this.sun.shadow.camera.right = 50
-        this.sun.shadow.camera.top = 50
-        this.sun.shadow.camera.bottom = -50
-        
-        this.sun.shadow.mapSize.width = 2048
-        this.sun.shadow.mapSize.height = 2048
-        
-        this.scene.add(this.sun)
-
-        // direction du soleil repris sur la cible
-        const sunHelper = new THREE.DirectionalLightHelper(this.sun, 5)
-        this.scene.add(sunHelper)
-    }
-
-    addGround(texture, repeats) {
-        const geometry = new THREE.PlaneGeometry(5000, 5000)
-        const material = createStandardMaterial(texture, repeats)
-        const plane = new THREE.Mesh(geometry, material)
-        plane.rotation.x = -Math.PI / 2
-        plane.receiveShadow = true
-        this.groundPlane = plane
-        this.scene.add(plane)
-    }
-
-    changeGround(texture, repeats) {
-        const newMaterial = createStandardMaterial(texture, repeats)
-        this.groundPlane.material = newMaterial
+    addSkybox(file) {
+        textureloader.load(
+            `skybox/${file}`,
+            (texture) => {
+                texture.mapping = THREE.EquirectangularReflectionMapping
+                texture.colorSpace = THREE.SRGBColorSpace
+                this.scene.background = texture
+            })
     }
 
     async loadScene(url) {
-        try {
-            const response = await fetch(url)
-            const sceneData = await response.json()
-            await this.loadNodesFromData(sceneData)
-        } catch (error) {
-            console.error('Erreur lors du chargement de la scène:', error)
+        const response = await fetch(url)
+        const data = await response.json()
+        for (const obj of data.nodes) {
+            if (this.loadedObjects[obj.name] == undefined) {
+                this.loadedObjects[obj.name] = await loadGltf(obj.name)
+            }
+            let mesh = this.loadedObjects[obj.name].clone()
+            mesh.position.fromArray(obj.position.split(',').map(Number))
+            mesh.quaternion.fromArray(obj.rotation.split(',').map(Number))
+            mesh.scale.fromArray(obj.scale.split(',').map(Number))
+            mesh.traverse(o => { 
+            if (o.isMesh) { 
+                o.userData = { 
+                    isSelectable: true,
+                    object : mesh,
+                };
+            }});
+            this.scene.add(mesh)
         }
-    }
-
-    addSkybox(filename) {
-        const texture = textureloader.load(`/skybox/${filename}`)
-        texture.mapping = THREE.EquirectangularReflectionMapping
-        this.scene.background = texture
-    }
-
-    getSelectableObjects() {
-        const objects = []
-        this.scene.children.forEach(child => {
-            child.traverse(mesh => {
-                if (mesh.isMesh && mesh.userData.isSelectable) {
-                    const parent = mesh.userData.object
-                    if (!objects.includes(parent)) {
-                        objects.push(parent)
-                    }
-                }
-            })
-        })
-        return objects
-    }
-
-    async loadNodesFromData(sceneData) {
-        if (!sceneData.nodes || !Array.isArray(sceneData.nodes)) return
-
-        for (const node of sceneData.nodes) {
-            const model = await loadGltf(node.name)
-
-            model.position.fromArray(node.position.split(',').map(Number))
-            model.quaternion.fromArray(node.rotation.split(',').map(Number))
-            model.scale.fromArray(node.scale.split(',').map(Number))
-
-            model.traverse(o => {
-                if (o.isMesh) {
-                    o.userData = {
-                        isSelectable: true,
-                        object: model,
-                    }
-                }
-            })
-
-            this.scene.add(model)
+         let params = {}
+        if (data.params) {
+            if (data.params.skybox) {
+                params.skybox = data.params.skybox
+            }
+            if (data.params.ground) {
+                params.ground = data.params.ground
+            }
         }
+        return params
     }
 
     exportScene(params) {
-        const nodes = this.getSelectableObjects().map(obj => ({
-            name: obj.name,
-            position: `${obj.position.x},${obj.position.y},${obj.position.z}`,
-            rotation: `${obj.quaternion.x},${obj.quaternion.y},${obj.quaternion.z},${obj.quaternion.w}`,
-            scale: `${obj.scale.x},${obj.scale.y},${obj.scale.z}`
-        }))
+        let exportData = {
+            params: params,
+            nodes: [],
+        };
+        let toExport = new Set()
+        this.scene.traverse((obj) => {
+            if (obj.userData && obj.userData.isSelectable) {
+                toExport.add(obj.userData.object);
+            }
+        });
+        toExport.forEach((obj) => {  
+            exportData.nodes.push({
+                name: obj.name || '',
+                position: `${obj.position.x},${obj.position.y},${obj.position.z}`,
+                rotation: `${obj.quaternion.x},${obj.quaternion.y},${obj.quaternion.z},${obj.quaternion.w}`,
+                scale: `${obj.scale.x},${obj.scale.y},${obj.scale.z}`
+            });
+        });
 
-        return {
-            params: {
-                version: '1.0',
-                skybox: params.skybox,
-                ground: params.ground
-            },
-            nodes
-        }
+        const jsonStr = JSON.stringify(exportData, null, 2)
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'scene_export.json'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
     }
 
     clearScene() {
-        this.getSelectableObjects().forEach(obj => {
-            this.scene.remove(obj)
+        let objectsToRemove = new Set()
+        this.scene.traverse((obj) => {
+            if (obj.userData && obj.userData.isSelectable) {
+                objectsToRemove.add(obj.userData.object)
+            }
         })
+        objectsToRemove.forEach((obj) => {  
+            this.scene.remove(obj)
+        })        
     }
 
     async importScene(event, params) {
-        const file = event.target.files[0]
+        const file = event.target.files?.[0]
         if (!file) return
-
+        this.clearScene()
+        const url = URL.createObjectURL(file)
         try {
-            const text = await file.text()
-            const sceneData = JSON.parse(text)
-
-            this.clearScene()
-
-            if (sceneData.params?.skybox) {
-                params.skybox.file = sceneData.params.skybox.file
-            }
-
-            if (sceneData.params?.ground) {
-                params.ground.texture = sceneData.params.ground.texture
-                params.ground.repeats = sceneData.params.ground.repeats
-            }
-
-            await this.loadNodesFromData(sceneData)
-        } catch (error) {
-            console.error('Erreur lors de l\'importation de la scène:', error)
+            const loadedParams = await this.loadScene(url);
+            if (loadedParams.skybox) params.skybox = loadedParams.skybox
+            if (loadedParams.ground) params.ground = loadedParams.ground
+            this.addSkybox(params.skybox.file)
+            this.changeGround(params.ground.texture, params.ground.repeats)
+        } catch (err) {
+            alert('Import failed: ' + (err?.message ?? err));
+        } finally {
+            URL.revokeObjectURL(url)
         }
     }
 
-    async loadModel(modelName, position) {
-        const model = await loadGltf(modelName)
-        model.position.copy(position)
-        model.traverse(o => {
-            if (o.isMesh) {
-                o.userData = { isSelectable: true, object: model }
-            }
-        })
-        this.scene.add(model)
-    }
-
-    deleteObject(object) {
-        if (object) {
-            this.scene.remove(object)
-        }
-    }
-
-    getAvailableModels() {
-        return ['birch1', 'bush1', 'bush2', 'flowers1', 'grass1', 'log1', 'oak1', 'oak2', 'oak3', 'pine1', 'spruce1', 'stone1', 'stone2', 'stump1']
-    }
-
-    addNewObject(modelName) {
-        this.loadModel(modelName, new THREE.Vector3(0, 0, 0))
-    }
 }
