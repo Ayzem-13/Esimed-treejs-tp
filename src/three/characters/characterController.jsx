@@ -90,6 +90,47 @@ export class CharacterController {
         }
     }
 
+    checkCollision(position) {
+        const halfSize = 0.25
+        const height = 1.8
+        const bottomMargin = 0.6 
+        
+        const min = new THREE.Vector3(
+            position.x - halfSize,
+            position.y - height / 2 + bottomMargin,
+            position.z - halfSize
+        )
+        const max = new THREE.Vector3(
+            position.x + halfSize,
+            position.y + height / 2,
+            position.z + halfSize
+        )
+        const charBox = new THREE.Box3(min, max)
+
+        let isColliding = false
+        this.scene.traverse((object) => {
+            if (isColliding) return
+            if (object === this.mesh) return
+            if (object.isMesh && object.userData?.isSelectable) {
+                const objBox = new THREE.Box3().setFromObject(object)
+                if (charBox.intersectsBox(objBox)) {
+                    // check si on est en train de se rapprocher de l'objet
+                    const objCenter = new THREE.Vector3()
+                    objBox.getCenter(objCenter)
+                    
+                    const currentDist = this.body.position.distanceTo(objCenter)
+                    const newDist = position.distanceTo(objCenter)
+                    
+                    if (newDist < currentDist) {
+                        isColliding = true
+                    }
+                }
+            }
+        })
+
+        return isColliding
+    }
+
     update(deltaTime = 1/60) {
         const moveInput = new THREE.Vector3()
 
@@ -125,12 +166,25 @@ export class CharacterController {
         }
 
         this.velocity.y -= this.gravity * deltaTime
-        this.body.position.addScaledVector(this.velocity, deltaTime)
+        // update les positions
+        const nextPosition = this.body.position.clone()
+        nextPosition.x += this.velocity.x * deltaTime
+        nextPosition.z += this.velocity.z * deltaTime
 
-        const characterHalfHeight = 0.9  
+        if (!this.checkCollision(nextPosition)) {
+            this.body.position.x = nextPosition.x
+            this.body.position.z = nextPosition.z
+        } else {
+            this.velocity.x = 0
+            this.velocity.z = 0
+        }
+
+        this.body.position.y += this.velocity.y * deltaTime
+
+        const characterHalfHeight = 0.9
         const groundLevel = 0
 
-        if (this.body.position.y - characterHalfHeight < groundLevel) {
+        if (this.body.position.y - characterHalfHeight <= groundLevel) {
             this.body.position.y = groundLevel + characterHalfHeight
             this.velocity.y = 0
             this.isGrounded = true
