@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { CameraCharacter } from './cameraCharacter'
 
 export class CharacterController {
@@ -33,6 +34,16 @@ export class CharacterController {
         this.bodyRotation = 0
         this.rotationSpeed = 0.08
 
+        // Animation
+        this.mixer = null
+        this.animations = []
+        this.currentAction = null
+        this.idleAction = null
+        this.walkAction = null
+
+        this.lastMoveForward = 0 
+
+        // Touche 
         this.keys = {
             Z: false,
             Q: false,
@@ -45,21 +56,43 @@ export class CharacterController {
     }
 
     createCharacterMesh() {
-        const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6)
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x3b82f6,
-            metalness: 0.5,
-            roughness: 0.5,
-            emissive: 0x1e40af
-        })
-        const cube = new THREE.Mesh(geometry, material)
-        cube.castShadow = true
-        cube.receiveShadow = true
-        cube.position.y = 0
-        this.body.add(cube)
-        this.mesh = cube
+        const loader = new GLTFLoader()
 
-        console.log('Character created at:', this.body.position)
+        loader.load(
+            '/models/character/Adventurer.glb',
+            (gltf) => {
+                this.mesh = gltf.scene
+                this.mesh.position.y = -0.9 
+                this.mesh.scale.set(1.2, 1.2, 1.2)
+
+                this.mesh.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true
+                        child.receiveShadow = true
+                    }
+                })
+
+                this.body.add(this.mesh)
+
+                if (gltf.animations && gltf.animations.length > 0) {
+                    this.animations = gltf.animations
+                    this.mixer = new THREE.AnimationMixer(this.mesh)
+
+                    this.idleAction = this.mixer.clipAction(this.animations[8])
+
+                    this.walkAction = this.mixer.clipAction(this.animations[16])
+
+                    this.idleAction.play()
+                    this.currentAction = this.idleAction
+                }
+
+                console.log('Personnage chargé!')
+            },
+            undefined,
+            (error) => {
+                console.error('Erreur de chargement:', error)
+            }
+        )
     }
 
     setupEventListeners() {
@@ -87,6 +120,20 @@ export class CharacterController {
         if (key in this.keys) {
             this.keys[key] = false
             event.preventDefault()
+        }
+    }
+
+    playAnimation(isMoving) {
+        if (!this.mixer || !this.idleAction || !this.walkAction) return
+
+        if (isMoving && this.currentAction !== this.walkAction) {
+            this.idleAction.stop()
+            this.walkAction.play()
+            this.currentAction = this.walkAction
+        } else if (!isMoving && this.currentAction !== this.idleAction) {
+            this.walkAction.stop()
+            this.idleAction.play()
+            this.currentAction = this.idleAction
         }
     }
 
@@ -132,41 +179,49 @@ export class CharacterController {
     }
 
     update(deltaTime = 1/60) {
-        const moveInput = new THREE.Vector3()
+        if (this.mixer) {
+            this.mixer.update(deltaTime)
+        }
+        
+        let moveForward = 0
+        let turnSpeed = 0    
 
-        if (this.keys.Z) moveInput.z -= 1
-        if (this.keys.S) moveInput.z += 1
-        if (this.keys.Q) moveInput.x -= 1
-        if (this.keys.D) moveInput.x += 1
+        if (this.keys.Z) moveForward = 1  
+        if (this.keys.S) moveForward = -1  
+        if (this.keys.D) turnSpeed = 1      
+        if (this.keys.Q) turnSpeed = -1    
 
-        if (moveInput.length() > 0) {
-            moveInput.normalize()
+        const isMoving = moveForward !== 0 || turnSpeed !== 0
+        this.playAnimation(isMoving)
 
-            const cameraYaw = this.cameraController.yaw
+        if (turnSpeed !== 0) {
+            this.bodyRotation += turnSpeed * this.rotationSpeed
+            this.body.rotation.y = this.bodyRotation
+        }
 
-            const worldMoveX = moveInput.x * Math.cos(cameraYaw) - moveInput.z * Math.sin(cameraYaw)
-            const worldMoveZ = moveInput.x * Math.sin(cameraYaw) + moveInput.z * Math.cos(cameraYaw)
-
-            const targetRotation = Math.atan2(worldMoveX, -worldMoveZ)
-            const rotationDiff = targetRotation - this.bodyRotation
-
-            const normalizedDiff = Math.atan2(
-                Math.sin(rotationDiff),
-                Math.cos(rotationDiff)
-            )
-
-            this.bodyRotation += normalizedDiff * this.rotationSpeed
+        if (moveForward !== 0) {
+            if (moveForward < 0 && this.lastMoveForward >= 0) {
+                this.bodyRotation += Math.PI
+            }
+            if (moveForward > 0 && this.lastMoveForward < 0) {
+                this.bodyRotation += Math.PI
+            }
+            this.lastMoveForward = moveForward
             this.body.rotation.y = this.bodyRotation
 
-            this.velocity.x = worldMoveX * this.moveSpeed
-            this.velocity.z = worldMoveZ * this.moveSpeed
+            const moveDistance = this.moveSpeed
+            this.velocity.x = Math.sin(this.bodyRotation) * moveDistance
+            this.velocity.z = Math.cos(this.bodyRotation) * moveDistance
         } else {
-            this.velocity.x = 0
-            this.velocity.z = 0
+            this.velocity.x *= 0.85
+            this.velocity.z *= 0.85
+
+            if (Math.abs(this.velocity.x) < 0.01) this.velocity.x = 0
+            if (Math.abs(this.velocity.z) < 0.01) this.velocity.z = 0
         }
 
         this.velocity.y -= this.gravity * deltaTime
-        // update les positions
+    
         const nextPosition = this.body.position.clone()
         nextPosition.x += this.velocity.x * deltaTime
         nextPosition.z += this.velocity.z * deltaTime

@@ -9,8 +9,10 @@ export class CameraCharacter {
         this.pitch = -0.3
         this.mouseSensitivity = 0.002
 
-        this.distance = 15
+        this.distance = 5
         this.height = 5
+        this.minDistance = 5  
+        this.maxDistance = 30  
 
         this.isMouseCaptured = false
 
@@ -34,6 +36,9 @@ export class CameraCharacter {
         document.addEventListener('pointerlockchange', () => {
             this.isMouseCaptured = document.pointerLockElement === document.body
         })
+
+        // Zoom/Dézoom avec la molette de la souris
+        document.addEventListener('wheel', (e) => this.handleWheel(e))
     }
 
     handleMouseMove(event) {
@@ -44,6 +49,18 @@ export class CameraCharacter {
 
         const maxPitchVel = Math.PI / 6
         this.pitchVelocity = Math.max(-maxPitchVel, Math.min(maxPitchVel, this.pitchVelocity))
+    }
+
+    // Gérer le zoom avec la molette
+    handleWheel(event) {
+        event.preventDefault()
+
+        // Ajuster la distance avec la molette
+        const zoomSpeed = 1
+        this.distance += event.deltaY * 0.01 * zoomSpeed
+
+        // Limiter la distance entre min et max
+        this.distance = Math.max(this.minDistance, Math.min(this.maxDistance, this.distance))
     }
 
     updateRotation() {
