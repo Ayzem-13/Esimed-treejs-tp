@@ -48,11 +48,9 @@ export class Control {
 
     setWASDMode(enabled) {
         this.wasdModeEnabled = enabled
-        // Disable OrbitControls when WASD mode is active
         this.setEnabled(!enabled)
 
         if (enabled) {
-            // Sync camera rotation state with current camera orientation
             const euler = new THREE.Euler()
             euler.setFromQuaternion(this.camera.quaternion, 'YXZ')
             this.cameraRotation.x = euler.x
@@ -67,7 +65,6 @@ export class Control {
     }
 
     handleMouseDown(event) {
-        // Right mouse button to control camera in WASD mode
         if (event.button === 2 && this.wasdModeEnabled) {
             this.isMouseDown = true
             this.lastMouseX = event.clientX
@@ -84,8 +81,7 @@ export class Control {
     handleKeyPress(event) {
         const key = event.key.toLowerCase()
 
-        // WASD movement tracking
-        if (['w', 'a', 's', 'd'].includes(key)) {
+        if (['z', 'q', 's', 'd'].includes(key)) {
             this.keysPressed[key] = true
             event.preventDefault()
         }
@@ -94,14 +90,12 @@ export class Control {
     handleKeyRelease(event) {
         const key = event.key.toLowerCase()
 
-        // WASD movement tracking
-        if (['w', 'a', 's', 'd'].includes(key)) {
+        if (['z', 'q', 's', 'd'].includes(key)) {
             this.keysPressed[key] = false
         }
     }
 
     handleMouseMove(event) {
-        // Camera control with right mouse button in WASD mode
         if (this.wasdModeEnabled && this.isMouseDown) {
             const deltaX = event.clientX - this.lastMouseX
             const deltaY = event.clientY - this.lastMouseY
@@ -109,20 +103,16 @@ export class Control {
             this.lastMouseX = event.clientX
             this.lastMouseY = event.clientY
 
-            // Update camera rotation
             this.cameraRotation.y += deltaX * this.mouseSensitivity
             this.cameraRotation.x += deltaY * this.mouseSensitivity
 
-            // Clamp pitch to prevent flipping
             this.cameraRotation.x = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, this.cameraRotation.x))
 
-            // Apply rotation to camera
             this.updateCameraRotation()
         }
     }
 
     updateCameraRotation() {
-        // Create euler angles from rotation values
         const euler = new THREE.Euler(this.cameraRotation.x, this.cameraRotation.y, 0, 'YXZ')
         this.camera.quaternion.setFromEuler(euler)
     }
@@ -133,7 +123,6 @@ export class Control {
         const moveSpeed = 0.2
         const direction = new THREE.Vector3()
 
-        // Get forward and right vectors based on camera rotation
         const forward = new THREE.Vector3()
         const right = new THREE.Vector3()
 
@@ -143,8 +132,7 @@ export class Control {
 
         right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
 
-        // Handle WASD inputs
-        if (this.keysPressed['w']) {
+        if (this.keysPressed['z']) {
             direction.addScaledVector(forward, moveSpeed)
         }
         if (this.keysPressed['s']) {
@@ -153,7 +141,7 @@ export class Control {
         if (this.keysPressed['d']) {
             direction.addScaledVector(right, moveSpeed)
         }
-        if (this.keysPressed['a']) {
+        if (this.keysPressed['q']) {
             direction.addScaledVector(right, -moveSpeed)
         }
 
