@@ -23,6 +23,12 @@ export class VehicleController {
         this.currentMoveForward = 0
         this.currentTurnSpeed = 0
 
+        // Roues du modèle 3D
+        this.wheels = []
+        this.leftWheels = []
+        this.rightWheels = []
+        this.wheelRotation = 0
+
         this.loadVehicleMesh()
     }
 
@@ -37,20 +43,42 @@ export class VehicleController {
                 this.mesh.position.copy(this.position)
 
                 const model = gltf.scene
-                model.position.y = 0.7  
+                model.position.y = 0.7
                 model.scale.set(0.8, 0.8, 0.8)
 
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true
                         child.receiveShadow = true
+
+                        // Identifier les roues 
+                        const name = child.name.toLowerCase()
+                        if (name.includes('wheel') || name.includes('tire') || name.includes('roue')) {
+                            // Exclure la roue de secours
+                            if (!name.includes('spare') && !name.includes('back') && !name.includes('rear')) {
+                                this.wheels.push(child)
+
+                                const isLeft = name.includes('left') || name.includes('_l') || name.includes('gauche') || name.includes('_fl') || name.includes('_rl')
+                                const isRight = name.includes('right') || name.includes('_r') || name.includes('droite') || name.includes('_fr') || name.includes('_rr')
+
+                                if (isLeft) {
+                                    this.leftWheels.push(child)
+                                } else if (isRight) {
+                                    this.rightWheels.push(child)
+                                }
+
+                                console.log('Roue trouvée:', child.name, isLeft ? '(gauche)' : isRight ? '(droite)' : '')
+                            } else {
+                                console.log('Roue de secours ignorée:', child.name)
+                            }
+                        }
                     }
                 })
 
                 this.mesh.add(model)
                 this.scene.add(this.mesh)
                 this.isLoaded = true
-                console.log('Véhicule chargé!')
+                console.log('Véhicule chargé! Roues trouvées:', this.wheels.length)
             },
             undefined,
             (error) => {
@@ -165,6 +193,25 @@ export class VehicleController {
         }
 
         this.mesh.position.copy(this.position)
+
+        if (this.wheels.length > 0) {
+            const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z)
+            this.wheelRotation += speed * deltaTime * 2
+
+            if (this.leftWheels.length === 0 && this.rightWheels.length === 0) {
+                for (const wheel of this.wheels) {
+                    wheel.rotation.x = this.wheelRotation
+                }
+            } else {
+                for (const wheel of this.rightWheels) {
+                    wheel.rotation.x = this.wheelRotation
+                }
+
+                for (const wheel of this.leftWheels) {
+                    wheel.rotation.x = -this.wheelRotation
+                }
+            }
+        }
     }
 
     show() {
@@ -195,5 +242,6 @@ export class VehicleController {
         if (this.mesh && this.mesh.parent) {
             this.mesh.parent.remove(this.mesh)
         }
+        this.wheels = []
     }
 }
