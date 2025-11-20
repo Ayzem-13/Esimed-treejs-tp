@@ -5,17 +5,24 @@ import { useScene } from '../context/SceneContext';
 export function CanvasContainer() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
-  const { setAppInstance } = useScene();
+  const { setAppInstance, menuClosed, setIsLoading } = useScene();
 
   useEffect(() => {
-    if (containerRef.current && !appRef.current) {
-      // Initialize Application
-      appRef.current = new Application(containerRef.current);
+    if (menuClosed && containerRef.current && !appRef.current) {
+      setIsLoading(true);
       
-      // Share instance with React Context
+      appRef.current = new Application(containerRef.current);
       setAppInstance(appRef.current);
-    }
 
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [menuClosed, setAppInstance, setIsLoading]);
+
+  useEffect(() => {
     return () => {
       if (appRef.current) {
         appRef.current.dispose();

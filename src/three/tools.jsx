@@ -20,15 +20,18 @@ export class ColorGUIHelper {
 
 export const loadGltf = function (filename) {
     return new Promise((resolve, reject) => {
+      
+        const path = filename.includes('/') ? `/models/${filename}.glb` : `/models/${filename}.glb`
+
         gltfLoader.load(
-            `/models/${filename}.glb`,
+            path,
             (gltf) => {
                 const mesh = gltf.scene
                 mesh.name = filename
-                mesh.traverse(o => { 
-                if (o.isMesh) { 
-                    o.castShadow = true; 
-                    o.receiveShadow = true; 
+                mesh.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
                 }})
                 resolve(mesh)
             },
