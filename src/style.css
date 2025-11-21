@@ -83,3 +83,14 @@ a:hover {
 button {
   background-color: #f9f9f9;
 }
+
+/* dropdown lil-gui */
+.lil-gui select {
+  background-color: #1f1f1f !important;
+  color: #fff !important;
+}
+
+.lil-gui option {
+  background-color: #1f1f1f !important;
+  color: #fff !important;
+}

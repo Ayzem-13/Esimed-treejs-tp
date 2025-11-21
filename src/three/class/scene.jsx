@@ -76,25 +76,48 @@ export class Scene {
     async loadScene(url) {
         const response = await fetch(url)
         const data = await response.json()
+
         for (const obj of data.nodes) {
-            const modelKey = obj.path || obj.name
-            if (this.loadedObjects[modelKey] == undefined) {
-                this.loadedObjects[modelKey] = await loadGltf(modelKey)
+            const modelNameWithoutGlb = obj.name.replace('.glb', '')
+
+            // Essayer tp d'abord
+            let mesh = null
+            try {
+                const modelKey = `tp/${modelNameWithoutGlb}`
+                if (this.loadedObjects[modelKey] == undefined) {
+                    this.loadedObjects[modelKey] = await loadGltf(modelKey)
+                }
+                mesh = this.loadedObjects[modelKey].clone()
+            } catch (err) {
+
+                try {
+                    const modelKey = `City_Pack/${modelNameWithoutGlb}`
+                    if (this.loadedObjects[modelKey] == undefined) {
+                        this.loadedObjects[modelKey] = await loadGltf(modelKey)
+                    }
+                    mesh = this.loadedObjects[modelKey].clone()
+                } catch (err2) {
+                    console.warn(`Could not load model: ${obj.name}`)
+                    continue
+                }
             }
-            let mesh = this.loadedObjects[modelKey].clone()
+
+            mesh.traverse(o => {
+                if (o.isMesh) {
+                    o.userData = {
+                        isSelectable: true,
+                        object : mesh,
+                    };
+                }
+            })
+
             mesh.position.fromArray(obj.position.split(',').map(Number))
             mesh.quaternion.fromArray(obj.rotation.split(',').map(Number))
             mesh.scale.fromArray(obj.scale.split(',').map(Number))
-            mesh.traverse(o => { 
-            if (o.isMesh) { 
-                o.userData = { 
-                    isSelectable: true,
-                    object : mesh,
-                };
-            }});
             this.scene.add(mesh)
         }
-         let params = {}
+
+        let params = {}
         if (data.params) {
             if (data.params.skybox) {
                 params.skybox = data.params.skybox
@@ -165,6 +188,37 @@ export class Scene {
             alert('Import failed: ' + (err?.message ?? err));
         } finally {
             URL.revokeObjectURL(url)
+        }
+    }
+
+    async addModelToScene(folder, modelName) {
+        const modelPath = `${folder}/${modelName.replace('.glb', '')}`
+        const modelKey = modelPath
+
+        if (!this.loadedObjects[modelKey]) {
+            this.loadedObjects[modelKey] = await loadGltf(modelPath)
+        }
+
+        const mesh = this.loadedObjects[modelKey].clone()
+        mesh.name = modelName.replace('.glb', '')
+        mesh.position.set(0, 0, 0)
+
+        mesh.traverse(o => {
+            if (o.isMesh) {
+                o.userData = {
+                    isSelectable: true,
+                    object: mesh,
+                }
+            }
+        })
+
+        this.scene.add(mesh)
+        return mesh
+    }
+
+    removeObjectFromScene(object) {
+        if (object) {
+            this.scene.remove(object)
         }
     }
 

@@ -9,7 +9,7 @@ export class Application {
 
     constructor(container = document.body, gameMode = 'editor') {
         this.container = container
-        this.gameMode = gameMode 
+        this.gameMode = gameMode
         this.initParams();
         this.renderer = new THREE.WebGPURenderer({antialias: true})
         this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -18,7 +18,7 @@ export class Application {
 
         this.camera = new Camera(this.renderer, this.globalParams)
 
-        this.scene = new Scene()        
+        this.scene = new Scene()
         // this.scene.addCube()
         this.scene.addAmbiantLight()
         this.scene.addGround(this.groundParams.texture, this.groundParams.repeats)
@@ -37,7 +37,7 @@ export class Application {
         });
 
         this.ui = new UI()
-        this.ui.addGlobalUI(this.globalParams, this.camera.toogleControls.bind(this.camera), 
+        this.ui.addGlobalUI(this.globalParams, this.camera.toogleControls.bind(this.camera),
             () => {
                 this.scene.exportScene({ skybox : this.skyboxParams, ground: this.groundParams})
             },
@@ -46,7 +46,8 @@ export class Application {
             },
             this.scene.clearScene.bind(this.scene)
         )
-        this.ui.addSelectionUI()
+        this.ui.addSelectionUI(this.handleTransformChange.bind(this), this.handleDeleteObject.bind(this))
+        this.ui.addModelLoader(this.tpModels, this.cityModels, this.handleLoadModel.bind(this))
         this.ui.addSkyboxUI(this.skyboxFiles, this.skyboxParams, this.scene.addSkybox.bind(this.scene))
         this.ui.addGroundUI(this.groundTextures, this.groundParams, this.scene.changeGround.bind(this.scene))
         this.ui.addSunUI(this.scene.sun)
@@ -69,6 +70,8 @@ export class Application {
         this.renderer.domElement.addEventListener('click', this.handleClick);
 
         this.moveSelectedObject = false
+        this.dragStartPosition = null
+        this.dragStartScale = null
         window.addEventListener('keydown', this.handleKeyDown)
         document.addEventListener('mousemove', this.handleMouseMove);
 
@@ -96,6 +99,7 @@ export class Application {
             this.selectedMeshMaterial = this.selectedMesh.material
             this.selectedMesh.material = new THREE.MeshStandardMaterial({ color: 0xffff00 })
             this.ui.updateSelectionUI(this.selectedObject)
+            this.moveSelectedObject = false
         } else {
             this.ui.hideSelectionUI()
         }
@@ -103,12 +107,19 @@ export class Application {
 
     handleKeyDown(event) {
         switch (event.code) {
-            case 'KeyG': this.moveSelectedObject = !this.moveSelectedObject; break
+            case 'KeyG':
+                this.moveSelectedObject = !this.moveSelectedObject
+                if (this.moveSelectedObject && this.selectedObject) {
+                    // Mémoriser la position et l'échelle au début du déplacement
+                    this.dragStartPosition = this.selectedObject.position.clone()
+                    this.dragStartScale = this.selectedObject.scale.clone()
+                }
+                break
         }
     }
 
     handleMouseMove(event) {
-        if (this.moveSelectedObject && this.selectedObject != null) {
+        if (this.moveSelectedObject && this.selectedObject != null && this.dragStartPosition) {
             const rect = this.renderer.domElement.getBoundingClientRect()
             const mouse = new THREE.Vector2(
                 ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -118,7 +129,25 @@ export class Application {
             raycaster.setFromCamera(mouse, this.camera.camera);
             const intersects = raycaster.intersectObject(this.scene.ground, true);
             if (intersects.length > 0) {
-                this.selectedObject.position.copy(intersects[0].point);
+
+                const hitPoint = intersects[0].point
+                const offset = new THREE.Vector3(
+                    hitPoint.x - this.dragStartPosition.x,
+                    0, // Ne pas changer Y pour éviter de tomber dans le sol
+                    hitPoint.z - this.dragStartPosition.z
+                )
+
+                // Appliquer l'offset à la position courante de départ
+                this.selectedObject.position.copy(this.dragStartPosition)
+                this.selectedObject.position.add(offset)
+
+                // Mettre à jour les contrôles de position dans l'UI
+                this.ui.positionControls.x = this.selectedObject.position.x
+                this.ui.positionControls.y = this.selectedObject.position.y
+                this.ui.positionControls.z = this.selectedObject.position.z
+                this.ui.posXControl.updateDisplay()
+                this.ui.posYControl.updateDisplay()
+                this.ui.posZControl.updateDisplay()
                 this.ui.updateSelectionUI(this.selectedObject)
             }
         }
@@ -144,7 +173,83 @@ export class Application {
         }
     }
 
+    async handleLoadModel(folder, modelName) {
+        try {
+            await this.scene.addModelToScene(folder, modelName)
+            console.log(`Model ${modelName} loaded successfully`)
+        } catch (error) {
+            console.error(`Error loading model ${modelName}:`, error)
+            alert(`Failed to load model: ${modelName}`)
+        }
+    }
+
+    handleTransformChange(transformType) {
+        if (!this.selectedObject) return
+
+        if (transformType === 'position') {
+            this.selectedObject.position.set(
+                this.ui.positionControls.x,
+                this.ui.positionControls.y,
+                this.ui.positionControls.z
+            )
+        } else if (transformType === 'rotation') {
+            this.selectedObject.rotation.set(
+                THREE.MathUtils.degToRad(this.ui.rotationControls.x),
+                THREE.MathUtils.degToRad(this.ui.rotationControls.y),
+                THREE.MathUtils.degToRad(this.ui.rotationControls.z)
+            )
+        } else if (transformType === 'scale') {
+            this.selectedObject.scale.set(
+                this.ui.scaleControls.uniform,
+                this.ui.scaleControls.uniform,
+                this.ui.scaleControls.uniform
+            )
+        }
+
+        this.ui.updateSelectionUI(this.selectedObject)
+    }
+
+    handleDeleteObject() {
+        if (!this.selectedObject) return
+
+        if (this.selectedMesh && this.selectedMeshMaterial) {
+            this.selectedMesh.material = this.selectedMeshMaterial
+        }
+
+        this.scene.removeObjectFromScene(this.selectedObject)
+
+        // Réinitialiser les références
+        this.selectedObject = null
+        this.selectedMesh = null
+        this.selectedMeshMaterial = null
+
+        this.ui.hideSelectionUI()
+    }
+
+
     initParams() {
+        this.tpModels = [
+            'birch1.glb', 'bush1.glb', 'bush2.glb', 'flowers1.glb',
+            'grass1.glb', 'log1.glb', 'oak1.glb', 'oak2.glb', 'oak3.glb',
+            'pine1.glb', 'spruce1.glb', 'stone1.glb', 'stone2.glb', 'stump1.glb'
+        ]
+
+        this.cityModels = [
+            'Air conditioner.glb', 'ATM.glb', 'Bench.glb',
+            'Bicycle.glb', 'Big Building.glb', 'Billboard.glb', 'Box.glb',
+            'Brown Building.glb', 'Building Green.glb', 'Building Red Corner.glb',
+            'Building Red.glb', 'Bus stop sign.glb', 'Bus Stop.glb', 'Bus.glb',
+            'Car.glb', 'Cone.glb', 'Debris Papers.glb', 'Dumpster.glb',
+            'Fence End.glb', 'Fence Piece.glb', 'Fence.glb', 'Fire Exit.glb',
+            'Fire hydrant.glb', 'Floor Hole.glb', 'Flower Pot.glb',
+            'Greenhouse.glb', 'Mailbox.glb', 'Man.glb', 'Manhole Cover.glb',
+            'Motorcycle.glb', 'Pickup Truck.glb', 'Pizza Corner.glb',
+            'Planter & Bushes.glb', 'Police Car.glb', 'Power Box.glb',
+            'Roof Exit.glb', 'Sports Car.glb', 'Stop sign.glb',
+            'SUV.glb', 'Traffic Light.glb', 'Trash Can.glb', 'Tree.glb',
+            'Van.glb', 'Washing Line.glb'
+        ]
+        
         this.groundTextures = [
             'aerial_grass_rock',
             'brown_mud_leaves_01',
@@ -160,9 +265,10 @@ export class Application {
             'DaySkyHDRI019A_2K-TONEMAPPED.jpg',
             'DaySkyHDRI050A_2K-TONEMAPPED.jpg',
             'NightSkyHDRI009_2K-TONEMAPPED.jpg',
+            'sky_23_2k.jpg',
         ]
         this.skyboxParams = {
-            file: this.skyboxFiles[0]
+            file: this.skyboxFiles[3]
         }
         this.globalParams = {
             useWASD: false
