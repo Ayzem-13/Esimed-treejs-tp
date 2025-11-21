@@ -34,9 +34,12 @@ export class Scene {
         this.scene.add(ambient)
     }
 
-    addGround(texture, repeats) {
+    addGround(params) {
         const planeSize = 5000
-        const planeMatPBR = createStandardMaterial(texture, repeats)
+        // init texture ou couleur
+        const planeMatPBR = params.useTexture 
+            ? createStandardMaterial(params.texture, params.repeats)
+            : createStandardMaterial(params.color, params.repeats)
         const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
         planeGeo.setAttribute('uv2', new THREE.BufferAttribute(planeGeo.attributes.uv.array, 2))
 
@@ -47,8 +50,10 @@ export class Scene {
         this.scene.add(this.ground)
     }
 
-    changeGround(texture, repeats) {
-        this.ground.material  = createStandardMaterial(texture, repeats)
+    changeGround(params) {
+        this.ground.material = params.useTexture 
+            ? createStandardMaterial(params.texture, params.repeats)
+            : createStandardMaterial(params.color, params.repeats)
     }
 
     addCube() {
@@ -183,7 +188,7 @@ export class Scene {
             if (loadedParams.skybox) params.skybox = loadedParams.skybox
             if (loadedParams.ground) params.ground = loadedParams.ground
             this.addSkybox(params.skybox.file)
-            this.changeGround(params.ground.texture, params.ground.repeats)
+            this.changeGround(params.ground)
         } catch (err) {
             alert('Import failed: ' + (err?.message ?? err));
         } finally {

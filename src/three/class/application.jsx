@@ -21,7 +21,7 @@ export class Application {
         this.scene = new Scene()
         // this.scene.addCube()
         this.scene.addAmbiantLight()
-        this.scene.addGround(this.groundParams.texture, this.groundParams.repeats)
+        this.scene.addGround(this.groundParams)
         this.scene.addSkybox(this.skyboxParams.file)
         this.sunHelper = this.scene.addDirectionalLight()
         this.scene.loadScene('/scenes/scene_1.json')
@@ -260,6 +260,8 @@ export class Application {
         this.groundParams = {
             texture: this.groundTextures[0],
             repeats: 750,
+            useTexture: false,  // true = texture, false = couleur unie
+            color: '#6b7b18'  
         }
         this.skyboxFiles = [
             'DaySkyHDRI019A_2K-TONEMAPPED.jpg',

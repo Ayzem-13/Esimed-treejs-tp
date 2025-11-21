@@ -109,8 +109,12 @@ export class UI {
 
     addGroundUI(textures, params, onChange) {
         const folder = this.gui.addFolder('Ground')
-        folder.add(params, 'texture', textures).name('texture').onChange(() => { onChange(params.texture, params.repeats);})
-        folder.add(params, 'repeats', 1, 1000).name('repeats').onChange(() => { onChange(params.texture, params.repeats);})
+        
+        // Toggle entre texture et couleur
+        folder.add(params, 'useTexture').name('Use Texture').onChange(() => { onChange(params); })
+        folder.add(params, 'texture', textures).name('Texture').onChange(() => { onChange(params); })
+        folder.addColor(params, 'color').name('Color (Low Poly)').onChange(() => { onChange(params); })
+        folder.add(params, 'repeats', 1, 1000).name('Repeats').onChange(() => { onChange(params); })
     }
     
     addSunUI(sun) {

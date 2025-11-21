@@ -45,23 +45,32 @@ export const loadGltf = function (filename) {
 }
 
 
-export const createStandardMaterial = function (texture, repeats) {
+export const createStandardMaterial = function (textureOrColor, repeats) {
+    // Si le paramètre commence par #, c'est une couleur
+    if (typeof textureOrColor === 'string' && textureOrColor.startsWith('#')) {
+        return new THREE.MeshStandardMaterial({
+            color: textureOrColor,
+            roughness: 0.8,
+            metalness: 0.2,
+        })
+    }
 
-  const floorTexture = textureloader.load(`textures/${texture}_diff_1k.jpg`)
+    // Sinon, c'est une texture - charger les textures PBR
+    const floorTexture = textureloader.load(`textures/${textureOrColor}_diff_1k.jpg`)
     floorTexture.wrapS = THREE.RepeatWrapping
     floorTexture.wrapT = THREE.RepeatWrapping
     floorTexture.repeat.set(repeats, repeats)
     floorTexture.magFilter = THREE.NearestFilter
     floorTexture.colorSpace = THREE.SRGBColorSpace
 
-    const floorTextureNormal = textureloader.load(`textures/${texture}_nor_gl_1k.jpg`)
+    const floorTextureNormal = textureloader.load(`textures/${textureOrColor}_nor_gl_1k.jpg`)
     floorTextureNormal.wrapS = THREE.RepeatWrapping
     floorTextureNormal.wrapT = THREE.RepeatWrapping
     floorTextureNormal.repeat.set(repeats, repeats)
     floorTextureNormal.magFilter = THREE.NearestFilter
     floorTextureNormal.colorSpace = THREE.SRGBColorSpace
 
-    const floorTextureARM = textureloader.load(`textures/${texture}_arm_1k.jpg`)
+    const floorTextureARM = textureloader.load(`textures/${textureOrColor}_arm_1k.jpg`)
     floorTextureARM.wrapS = THREE.RepeatWrapping
     floorTextureARM.wrapT = THREE.RepeatWrapping
     floorTextureARM.repeat.set(repeats, repeats)
