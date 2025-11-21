@@ -16,7 +16,6 @@ export class VehicleController {
         this.length = 1.8
 
         this.velocity = new THREE.Vector3(0, 0, 0)
-        this.moveSpeed = 8
         this.rotationSpeed = 0.1
         this.gravity = 9.8
         this.isGrounded = true
@@ -29,6 +28,12 @@ export class VehicleController {
         this.rightWheels = []
         this.rearWheels = []
         this.wheelRotation = 0
+        this.steeringAngle = 0
+
+        this.currentSpeed = 0
+        this.acceleration = 5
+        this.deceleration = 8
+        this.moveSpeed = 15
 
         this.smokeParticles = new ParticleSystem(scene)
         this.emissionTimer = 0
@@ -87,6 +92,15 @@ export class VehicleController {
                 this.mesh.add(model)
                 this.scene.add(this.mesh)
                 this.isLoaded = true
+
+                let steeringCount = 0
+                for (const wheel of this.wheels) {
+                    if (steeringCount < 2) {
+                        wheel.userData.isSteering = true
+                        steeringCount++
+                    }
+                }
+
                 console.log('Véhicule chargé! Roues trouvées:', this.wheels.length)
             },
             undefined,
@@ -158,21 +172,23 @@ export class VehicleController {
         }
 
         if (moveForward !== 0) {
-            const moveDistance = this.moveSpeed * moveForward
-            this.velocity.x = Math.sin(this.rotation) * moveDistance
-            this.velocity.z = Math.cos(this.rotation) * moveDistance
+            const targetSpeed = this.moveSpeed * moveForward
+            if (this.currentSpeed < targetSpeed) {
+                this.currentSpeed += this.acceleration * deltaTime
+                if (this.currentSpeed > targetSpeed) this.currentSpeed = targetSpeed
+            } else if (this.currentSpeed > targetSpeed) {
+                this.currentSpeed -= this.acceleration * deltaTime
+                if (this.currentSpeed < targetSpeed) this.currentSpeed = targetSpeed
+            }
         } else {
-            this.velocity.x *= 0.85
-            this.velocity.z *= 0.85
-
-            if (Math.abs(this.velocity.x) < 0.01) this.velocity.x = 0
-            if (Math.abs(this.velocity.z) < 0.01) this.velocity.z = 0
-
-            if (turnSpeed !== 0 && moveForward === 0) {
-                this.velocity.x = 0
-                this.velocity.z = 0
+            if (this.currentSpeed > 0) {
+                this.currentSpeed -= this.deceleration * deltaTime
+                if (this.currentSpeed < 0) this.currentSpeed = 0
             }
         }
+
+        this.velocity.x = Math.sin(this.rotation) * this.currentSpeed
+        this.velocity.z = Math.cos(this.rotation) * this.currentSpeed
 
         this.velocity.y -= this.gravity * deltaTime
 
@@ -214,13 +230,21 @@ export class VehicleController {
             } else {
                 for (const wheel of this.rightWheels) {
                     wheel.rotation.x = this.wheelRotation
+                    if (wheel.userData.isSteering) {
+                        wheel.rotation.y = this.steeringAngle
+                    }
                 }
 
                 for (const wheel of this.leftWheels) {
                     wheel.rotation.x = -this.wheelRotation
+                    if (wheel.userData.isSteering) {
+                        wheel.rotation.y = this.steeringAngle
+                    }
                 }
             }
         }
+
+        this.steeringAngle = turnSpeed * 0.4
 
         // Fumée quand le véhicule avance
         if (moveForward !== 0) {
@@ -276,6 +300,10 @@ export class VehicleController {
         const offset = new THREE.Vector3(0, 0, -2)
         offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.rotation)
         return this.position.clone().add(offset)
+    }
+
+    getSpeedKmh() {
+        return this.currentSpeed * 3.6
     }
 
     dispose() {
