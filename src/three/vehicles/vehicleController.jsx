@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { ParticleSystem } from '../particles/ParticleSystem'
 
 export class VehicleController {
     constructor(scene, initialPosition = new THREE.Vector3(0, 0, 0)) {
@@ -23,11 +24,15 @@ export class VehicleController {
         this.currentMoveForward = 0
         this.currentTurnSpeed = 0
 
-        // Roues du modèle 3D
         this.wheels = []
         this.leftWheels = []
         this.rightWheels = []
+        this.rearWheels = []
         this.wheelRotation = 0
+
+        this.smokeParticles = new ParticleSystem(scene)
+        this.emissionTimer = 0
+        this.emissionRate = 0.1
 
         this.loadVehicleMesh()
     }
@@ -51,26 +56,30 @@ export class VehicleController {
                         child.castShadow = true
                         child.receiveShadow = true
 
-                        // Identifier les roues 
                         const name = child.name.toLowerCase()
                         if (name.includes('wheel') || name.includes('tire') || name.includes('roue')) {
-                            // Exclure la roue de secours
-                            if (!name.includes('spare') && !name.includes('back') && !name.includes('rear')) {
-                                this.wheels.push(child)
-
-                                const isLeft = name.includes('left') || name.includes('_l') || name.includes('gauche') || name.includes('_fl') || name.includes('_rl')
-                                const isRight = name.includes('right') || name.includes('_r') || name.includes('droite') || name.includes('_fr') || name.includes('_rr')
-
-                                if (isLeft) {
-                                    this.leftWheels.push(child)
-                                } else if (isRight) {
-                                    this.rightWheels.push(child)
-                                }
-
-                                console.log('Roue trouvée:', child.name, isLeft ? '(gauche)' : isRight ? '(droite)' : '')
-                            } else {
+                            if (name.includes('spare') || name.includes('back') || name.includes('rear')) {
                                 console.log('Roue de secours ignorée:', child.name)
+                                return
                             }
+
+                            this.wheels.push(child)
+
+                            const isLeft = name.includes('left') || name.includes('_l') || name.includes('gauche') || name.includes('_fl') || name.includes('_rl')
+                            const isRight = name.includes('right') || name.includes('_r') || name.includes('droite') || name.includes('_fr') || name.includes('_rr')
+                            const isRear = name.includes('_rl') || name.includes('_rr')
+
+                            if (isLeft) {
+                                this.leftWheels.push(child)
+                            } else if (isRight) {
+                                this.rightWheels.push(child)
+                            }
+
+                            if (isRear) {
+                                this.rearWheels.push(child)
+                            }
+
+                            console.log('Roue:', child.name, '- Gauche:', isLeft, 'Droite:', isRight, 'Arrière:', isRear)
                         }
                     }
                 })
@@ -212,6 +221,37 @@ export class VehicleController {
                 }
             }
         }
+
+        // Fumée quand le véhicule avance
+        if (moveForward !== 0) {
+            this.emissionTimer += deltaTime
+
+            if (this.emissionTimer >= this.emissionRate) {
+                this.emissionTimer = 0
+
+                const center = this.position.clone()
+                const backwardDistance = 1.2
+                const rearCenter = center.clone()
+                rearCenter.x -= Math.sin(this.rotation) * backwardDistance
+                rearCenter.z -= Math.cos(this.rotation) * backwardDistance
+                rearCenter.y = 0.2
+
+                const wheelSpacing = 0.35
+
+                const leftSmoke = rearCenter.clone()
+                leftSmoke.x += Math.cos(this.rotation) * wheelSpacing
+                leftSmoke.z -= Math.sin(this.rotation) * wheelSpacing
+
+                const rightSmoke = rearCenter.clone()
+                rightSmoke.x -= Math.cos(this.rotation) * wheelSpacing
+                rightSmoke.z += Math.sin(this.rotation) * wheelSpacing
+
+                this.smokeParticles.emit(leftSmoke)
+                this.smokeParticles.emit(rightSmoke)
+            }
+        }
+
+        this.smokeParticles.update(deltaTime)
     }
 
     show() {
@@ -243,5 +283,6 @@ export class VehicleController {
             this.mesh.parent.remove(this.mesh)
         }
         this.wheels = []
+        this.smokeParticles.dispose()
     }
 }
