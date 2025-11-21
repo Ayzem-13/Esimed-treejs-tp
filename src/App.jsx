@@ -4,6 +4,7 @@ import { CanvasContainer } from './components/CanvasContainer';
 import { StartMenu } from './components/StartMenu';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PauseMenu } from './components/PauseMenu';
+import { Speedometer } from './components/Speedometer';
 import { useScene } from './context/SceneContext';
 
 function AppContent() {
@@ -81,6 +82,7 @@ function AppContent() {
         />
       )}
       <LoadingScreen isLoading={isLoading} />
+      <Speedometer />
       <PauseMenu
         isOpen={isPaused}
         onClose={handlePauseToggle}

@@ -31,9 +31,10 @@ export class VehicleController {
         this.steeringAngle = 0
 
         this.currentSpeed = 0
-        this.acceleration = 5
-        this.deceleration = 8
-        this.moveSpeed = 15
+        this.acceleration = 20
+        this.deceleration = 15
+        this.moveSpeed = 27.78
+        this.reverseSpeed = 8.33
 
         this.smokeParticles = new ParticleSystem(scene)
         this.emissionTimer = 0
@@ -171,19 +172,27 @@ export class VehicleController {
             this.mesh.rotation.y = this.rotation
         }
 
-        if (moveForward !== 0) {
-            const targetSpeed = this.moveSpeed * moveForward
-            if (this.currentSpeed < targetSpeed) {
-                this.currentSpeed += this.acceleration * deltaTime
-                if (this.currentSpeed > targetSpeed) this.currentSpeed = targetSpeed
-            } else if (this.currentSpeed > targetSpeed) {
-                this.currentSpeed -= this.acceleration * deltaTime
-                if (this.currentSpeed < targetSpeed) this.currentSpeed = targetSpeed
+        // Accélération/décélération progressive
+        if (moveForward > 0) {
+            // Avancer - accélérer vers la vitesse max (moveSpeed)
+            this.currentSpeed += this.acceleration * deltaTime
+            if (this.currentSpeed > this.moveSpeed) {
+                this.currentSpeed = this.moveSpeed
+            }
+        } else if (moveForward < 0) {
+            // Reculer - accélérer vers la vitesse de recul négative
+            this.currentSpeed -= this.acceleration * deltaTime
+            if (this.currentSpeed < -this.reverseSpeed) {
+                this.currentSpeed = -this.reverseSpeed
             }
         } else {
+            // Pas d'accélération - décélérer progressivement
             if (this.currentSpeed > 0) {
                 this.currentSpeed -= this.deceleration * deltaTime
                 if (this.currentSpeed < 0) this.currentSpeed = 0
+            } else if (this.currentSpeed < 0) {
+                this.currentSpeed += this.deceleration * deltaTime
+                if (this.currentSpeed > 0) this.currentSpeed = 0
             }
         }
 
@@ -303,7 +312,7 @@ export class VehicleController {
     }
 
     getSpeedKmh() {
-        return this.currentSpeed * 3.6
+        return Math.abs(this.currentSpeed) * 3.6
     }
 
     dispose() {
