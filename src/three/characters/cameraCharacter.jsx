@@ -5,103 +5,83 @@ export class CameraCharacter {
         this.camera = camera
         this.character = character
 
-        this.yaw = 0
-        this.pitch = -0.3
-        this.mouseSensitivity = 0.002
-
         this.distance = 5
-        this.height = 5
-        this.minDistance = 5  
-        this.maxDistance = 30  
+        this.minDistance = 3
+        this.maxDistance = 20
 
-        this.isMouseCaptured = false
+        this.cameraHeight = 2
 
-        this.yawVelocity = 0
-        this.pitchVelocity = 0
-        this.mouseDamping = 0.88
+        this.angleVertical = -0.2
+        this.angleHorizontal = 0 
+        this.isRotating = false 
 
-        this.setupEventListeners()
-    }
-
-    setupEventListeners() {
-        document.addEventListener('click', () => {
-            if (!this.isMouseCaptured) {
-                document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock
-                document.body.requestPointerLock()
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 2) { 
+                this.isRotating = true
+                e.preventDefault()
             }
         })
 
-        document.addEventListener('mousemove', (e) => this.handleMouseMove(e))
-
-        document.addEventListener('pointerlockchange', () => {
-            this.isMouseCaptured = document.pointerLockElement === document.body
+        document.addEventListener('mouseup', (e) => {
+            if (e.button === 2) {
+                this.isRotating = false
+            }
         })
 
-        document.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
-    }
+        document.addEventListener('contextmenu', (e) => e.preventDefault())
 
-    handleMouseMove(event) {
-        if (!this.isMouseCaptured) return
+        document.addEventListener('mousemove', (e) => {
+            if (this.isRotating) {
+                this.angleHorizontal -= e.movementX * 0.005 
+                this.angleVertical -= e.movementY * 0.003
 
-        this.yawVelocity += event.movementX * this.mouseSensitivity
-        this.pitchVelocity += event.movementY * this.mouseSensitivity
+                this.angleVertical = Math.max(-1.2, Math.min(0.5, this.angleVertical))
+            }
+        })
 
-        const maxPitchVel = Math.PI / 6
-        this.pitchVelocity = Math.max(-maxPitchVel, Math.min(maxPitchVel, this.pitchVelocity))
-    }
-
-    handleWheel(event) {
-        event.preventDefault()
-
-        const zoomSpeed = 1
-        this.distance += event.deltaY * 0.01 * zoomSpeed
-
-        // Limiter la distance entre min et max
-        this.distance = Math.max(this.minDistance, Math.min(this.maxDistance, this.distance))
-    }
-
-    updateRotation() {
-        this.yawVelocity *= this.mouseDamping
-        this.pitchVelocity *= this.mouseDamping
-
-        this.yaw += this.yawVelocity
-        this.pitch += this.pitchVelocity
-
-        const maxPitch = Math.PI / 3
-        const minPitch = -Math.PI / 2.5
-        this.pitch = Math.max(minPitch, Math.min(maxPitch, this.pitch))
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault()
+            this.distance += e.deltaY * 0.01
+            this.distance = Math.max(this.minDistance, Math.min(this.maxDistance, this.distance))
+        }, { passive: false })
     }
 
     update() {
         if (!this.character || !this.camera) return
 
-        this.updateRotation()
+        let playerPosition
+        let playerRotation
 
-        let targetPos
         if (this.character.inVehicle && this.character.vehicle) {
-            targetPos = this.character.vehicle.position.clone()
+            playerPosition = this.character.vehicle.position
+            playerRotation = this.character.vehicle.rotation
         } else {
-            targetPos = this.character.body.position.clone()
+            playerPosition = this.character.body.position
+            playerRotation = this.character.bodyRotation
         }
 
-        const horizontalDistance = this.distance * Math.cos(this.pitch)
-        const cameraX = targetPos.x - Math.sin(this.yaw) * horizontalDistance
-        const cameraY = targetPos.y + this.height - Math.sin(this.pitch) * this.distance
-        const cameraZ = targetPos.z - Math.cos(this.yaw) * horizontalDistance
+        const totalRotation = playerRotation + this.angleHorizontal
 
-        const targetCameraPos = new THREE.Vector3(cameraX, cameraY, cameraZ)
+        const distanceHorizontale = this.distance * Math.cos(this.angleVertical)
 
-        const cameraSpeed = 8.0
-        const lerpFactor = Math.min(1.0, cameraSpeed * (1/60))
-        this.camera.position.lerp(targetCameraPos, lerpFactor)
+        const cameraPosX = playerPosition.x - Math.sin(totalRotation) * distanceHorizontale
+        const cameraPosY = playerPosition.y + this.cameraHeight - Math.sin(this.angleVertical) * this.distance
+        const cameraPosZ = playerPosition.z - Math.cos(totalRotation) * distanceHorizontale
 
-        const lookAtPoint = targetPos.clone()
-        lookAtPoint.y += 1.2
+        this.camera.position.lerp(
+            new THREE.Vector3(cameraPosX, cameraPosY, cameraPosZ),
+            0.1
+        )
 
-        this.camera.lookAt(lookAtPoint)
+        const lookAtTarget = new THREE.Vector3(
+            playerPosition.x,
+            playerPosition.y + 1.5,
+            playerPosition.z
+        )
+        this.camera.lookAt(lookAtTarget)
     }
 
     dispose() {
-        document.exitPointerLock()
+        this.isRotating = false
     }
 }
