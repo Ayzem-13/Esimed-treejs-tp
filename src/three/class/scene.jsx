@@ -77,10 +77,11 @@ export class Scene {
         const response = await fetch(url)
         const data = await response.json()
         for (const obj of data.nodes) {
-            if (this.loadedObjects[obj.name] == undefined) {
-                this.loadedObjects[obj.name] = await loadGltf(obj.name)
+            const modelKey = obj.path || obj.name
+            if (this.loadedObjects[modelKey] == undefined) {
+                this.loadedObjects[modelKey] = await loadGltf(modelKey)
             }
-            let mesh = this.loadedObjects[obj.name].clone()
+            let mesh = this.loadedObjects[modelKey].clone()
             mesh.position.fromArray(obj.position.split(',').map(Number))
             mesh.quaternion.fromArray(obj.rotation.split(',').map(Number))
             mesh.scale.fromArray(obj.scale.split(',').map(Number))

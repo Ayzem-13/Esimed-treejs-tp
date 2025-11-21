@@ -20,8 +20,8 @@ export class ColorGUIHelper {
 
 export const loadGltf = function (filename) {
     return new Promise((resolve, reject) => {
-      
-        const path = filename.includes('/') ? `/models/${filename}.glb` : `/models/${filename}.glb`
+
+        const path = filename.startsWith('/models/') ? `${filename}.glb` : `/models/${filename}.glb`
 
         gltfLoader.load(
             path,
