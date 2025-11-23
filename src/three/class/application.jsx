@@ -73,8 +73,11 @@ export class Application {
         this.renderer.domElement.addEventListener('click', this.handleClick);
 
         this.moveSelectedObject = false
+        this.rotateSelectedObject = false
         this.dragStartPosition = null
+        this.dragStartRotation = null
         this.dragStartScale = null
+        this.dragStartMouseX = null
         window.addEventListener('keydown', this.handleKeyDown)
         document.addEventListener('mousemove', this.handleMouseMove);
 
@@ -112,10 +115,21 @@ export class Application {
         switch (event.code) {
             case 'KeyG':
                 this.moveSelectedObject = !this.moveSelectedObject
+                this.rotateSelectedObject = false
                 if (this.moveSelectedObject && this.selectedObject) {
                     // Mémoriser la position et l'échelle au début du déplacement
                     this.dragStartPosition = this.selectedObject.position.clone()
                     this.dragStartScale = this.selectedObject.scale.clone()
+                    this.dragStartMouseX = null
+                }
+                break
+            case 'KeyR':
+                this.rotateSelectedObject = !this.rotateSelectedObject
+                this.moveSelectedObject = false
+                if (this.rotateSelectedObject && this.selectedObject) {
+                    // Mémoriser la rotation au début de la rotation
+                    this.dragStartRotation = this.selectedObject.rotation.clone()
+                    this.dragStartMouseX = null
                 }
                 break
         }
@@ -151,8 +165,28 @@ export class Application {
                 this.ui.posXControl.updateDisplay()
                 this.ui.posYControl.updateDisplay()
                 this.ui.posZControl.updateDisplay()
-                this.ui.updateSelectionUI(this.selectedObject)
             }
+        } else if (this.rotateSelectedObject && this.selectedObject != null && this.dragStartRotation) {
+            // Initialiser la position de départ de la souris
+            if (this.dragStartMouseX === null) {
+                this.dragStartMouseX = event.clientX
+            }
+
+            const mouseDelta = event.clientX - this.dragStartMouseX
+            const rotationSpeed = 0.01 // Sensibilité de la rotation
+            const deltaY = mouseDelta * rotationSpeed
+
+            // Appliquer la rotation autour de l'axe Y
+            this.selectedObject.rotation.copy(this.dragStartRotation)
+            this.selectedObject.rotation.y += deltaY
+
+            // Mettre à jour les contrôles de rotation dans l'UI
+            this.ui.rotationControls.x = THREE.MathUtils.radToDeg(this.selectedObject.rotation.x)
+            this.ui.rotationControls.y = THREE.MathUtils.radToDeg(this.selectedObject.rotation.y)
+            this.ui.rotationControls.z = THREE.MathUtils.radToDeg(this.selectedObject.rotation.z)
+            this.ui.rotXControl.updateDisplay()
+            this.ui.rotYControl.updateDisplay()
+            this.ui.rotZControl.updateDisplay()
         }
     }
 
