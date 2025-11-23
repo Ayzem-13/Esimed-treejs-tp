@@ -5,7 +5,7 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree
 
-const DEBUG = true
+const DEBUG = false
 
 export class CollisionManager {
     constructor(scene) {

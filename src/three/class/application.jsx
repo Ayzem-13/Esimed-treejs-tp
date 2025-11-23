@@ -5,6 +5,7 @@ import { Camera } from './camera'
 import { CharacterController } from '../characters/characterController'
 import { VehicleController } from '../vehicles/vehicleController'
 import { NPCController } from '../npc/npcController'
+import { EnemyController } from '../enemies/enemyController'
 
 export class Application {
 
@@ -12,7 +13,7 @@ export class Application {
         this.container = container
         this.gameMode = gameMode
         this.initParams();
-        this.renderer = new THREE.WebGPURenderer({antialias: true})
+        this.renderer = new THREE.WebGPURenderer({ antialias: true })
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.renderer.shadowMap.enabled = true
         this.container.appendChild(this.renderer.domElement)
@@ -33,14 +34,14 @@ export class Application {
         this.importInput.style.display = 'none';
         this.container.appendChild(this.importInput)
         this.importInput.addEventListener('change', async (event) => {
-            await this.scene.importScene(event, { skybox : this.skyboxParams, ground: this.groundParams})
+            await this.scene.importScene(event, { skybox: this.skyboxParams, ground: this.groundParams })
             this.importInput.value = ''
         });
 
         this.ui = new UI()
         this.ui.addGlobalUI(this.globalParams, this.camera.toogleControls.bind(this.camera),
             () => {
-                this.scene.exportScene({ skybox : this.skyboxParams, ground: this.groundParams})
+                this.scene.exportScene({ skybox: this.skyboxParams, ground: this.groundParams })
             },
             () => {
                 this.importInput.click()
@@ -55,9 +56,15 @@ export class Application {
 
         this.character = null
         this.npcs = []
+        this.enemies = []
         if (this.gameMode === 'character') {
             this.initCharacter()
             this.initNPCs(this.character.collisionManager)
+            this.initEnemies(this.character.collisionManager)
+            // Passer le véhicule aux ennemis pour qu'ils le suivent
+            for (const enemy of this.enemies) {
+                enemy.setTargetVehicle(this.vehicle)
+            }
         }
 
         this.selectedObject = null
@@ -211,6 +218,29 @@ export class Application {
 
     }
 
+    initEnemies(collisionManager) {
+        // Créer 4 zombies simples
+        const positions = [
+            new THREE.Vector3(15, 0, 15),
+            new THREE.Vector3(-15, 0, 15),
+            new THREE.Vector3(15, 0, -15),
+            new THREE.Vector3(-15, 0, -15)
+        ]
+
+        positions.forEach((pos, idx) => {
+            const zombie = new EnemyController(
+                this.scene.scene,
+                pos,
+                { scale: 1 },
+                collisionManager
+            )
+            zombie.setTargetCharacter(this.character)
+            this.enemies.push(zombie)
+            console.log(`Zombie ${idx + 1} créé`)
+        })
+    }
+
+
     initCharacter() {
         const spawnPosition = new THREE.Vector3(-10, 1, 5)
         this.character = new CharacterController(
@@ -323,7 +353,7 @@ export class Application {
             ...this.cityModelCategories.props.map(m => `City_Pprops/${m}`),
             ...this.cityModelCategories.vehicules.map(m => `vehicules/${m}`)
         ]
-        
+
         this.groundTextures = [
             'aerial_grass_rock',
             'brown_mud_leaves_01',
@@ -335,7 +365,7 @@ export class Application {
             texture: this.groundTextures[0],
             repeats: 750,
             useTexture: false,  // true = texture, false = couleur unie
-            color: '#6b7b18'  
+            color: '#6b7b18'
         }
         this.skyboxFiles = [
             'DaySkyHDRI019A_2K-TONEMAPPED.jpg',
@@ -363,6 +393,10 @@ export class Application {
         for (const npc of this.npcs) {
             npc.update(deltaTime)
         }
+        // Mettre à jour les ennemis
+        for (const enemy of this.enemies) {
+            enemy.update(deltaTime)
+        }
         this.camera.process(this.globalParams)
         this.sunHelper.update()
         this.renderer.render(this.scene.scene, this.camera.camera)
@@ -385,6 +419,12 @@ export class Application {
             npc.dispose()
         }
         this.npcs = []
+
+        // Nettoyer les ennemis
+        for (const enemy of this.enemies) {
+            enemy.dispose()
+        }
+        this.enemies = []
 
         if (this.camera) {
             this.camera.dispose()
