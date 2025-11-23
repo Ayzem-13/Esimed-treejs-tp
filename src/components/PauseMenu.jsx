@@ -56,7 +56,7 @@ export function PauseMenu({ isOpen, onClose, onQuit }) {
 
       <div
         ref={menuRef}
-        className="fixed top-0 right-0 h-screen w-96 bg-gradient-to-br from-gray-50 via-gray-100 to-blue-50 shadow-2xl z-50 flex flex-col"
+        className="fixed top-0 right-0 h-screen w-96 bg-linear-to-br from-gray-50 via-gray-100 to-blue-50 shadow-2xl z-50 flex flex-col"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-0 w-60 h-60 bg-blue-200/30 rounded-full blur-3xl"></div>
