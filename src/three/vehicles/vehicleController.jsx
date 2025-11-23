@@ -54,7 +54,7 @@ export class VehicleController {
         const loader = new GLTFLoader()
 
         loader.load(
-            '/models/vehicle/Range Rover.glb',
+            '/models/City_Pack/vehicules/Range Rover.glb',
             (gltf) => {
 
                 this.mesh = new THREE.Group()

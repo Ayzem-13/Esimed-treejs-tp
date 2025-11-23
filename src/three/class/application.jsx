@@ -263,20 +263,30 @@ export class Application {
             'pine1.glb', 'spruce1.glb', 'stone1.glb', 'stone2.glb', 'stump1.glb'
         ]
 
+        // Réorganiser les cityModels par catégorie
+        this.cityModelCategories = {
+            'batiment': [
+                'Big Building.glb', 'Brown Building.glb', 'Building Green.glb', 'Building Red Corner.glb',
+                'Building Red.glb', 'Greenhouse.glb', 'Pizza Corner.glb', 'RB Blank.glb', 'Roof Exit.glb'
+            ],
+            'props': [
+                'Air conditioner.glb', 'ATM.glb', 'Bench.glb', 'Billboard.glb', 'Box.glb',
+                'Bus stop sign.glb', 'Bus Stop.glb', 'Cone.glb', 'Dumpster.glb', 'Fence End.glb',
+                'Fence Piece.glb', 'Fence.glb', 'Fire Exit.glb', 'Fire hydrant.glb', 'Floor Hole.glb',
+                'Flower Pot.glb', 'Mailbox.glb', 'Planter & Bushes.glb', 'Stop sign.glb', 'Traffic Light.glb',
+                'Trash Can.glb', 'Tree.glb'
+            ],
+            'vehicules': [
+                'Bicycle.glb', 'Bus.glb', 'Car.glb', 'Motorcycle.glb', 'Pickup Truck.glb', 'Police Car.glb',
+                'Sports Car.glb', 'SUV.glb', 'Van.glb'
+            ]
+        }
+
+        // Créer un tableau plat pour compatibilité avec l'UI existante
         this.cityModels = [
-            'Air conditioner.glb', 'ATM.glb', 'Bench.glb',
-            'Bicycle.glb', 'Big Building.glb', 'Billboard.glb', 'Box.glb',
-            'Brown Building.glb', 'Building Green.glb', 'Building Red Corner.glb',
-            'Building Red.glb', 'Bus stop sign.glb', 'Bus Stop.glb', 'Bus.glb',
-            'Car.glb', 'Cone.glb', 'Debris Papers.glb', 'Dumpster.glb',
-            'Fence End.glb', 'Fence Piece.glb', 'Fence.glb', 'Fire Exit.glb',
-            'Fire hydrant.glb', 'Floor Hole.glb', 'Flower Pot.glb',
-            'Greenhouse.glb', 'Mailbox.glb', 'Man.glb', 'Manhole Cover.glb',
-            'Motorcycle.glb', 'Pickup Truck.glb', 'Pizza Corner.glb',
-            'Planter & Bushes.glb', 'Police Car.glb', 'Power Box.glb',
-            'Roof Exit.glb', 'Sports Car.glb', 'Stop sign.glb',
-            'SUV.glb', 'Traffic Light.glb', 'Trash Can.glb', 'Tree.glb',
-            'Van.glb', 'Washing Line.glb'
+            ...this.cityModelCategories.batiment.map(m => `batiment/${m}`),
+            ...this.cityModelCategories.props.map(m => `City_Pprops/${m}`),
+            ...this.cityModelCategories.vehicules.map(m => `vehicules/${m}`)
         ]
         
         this.groundTextures = [
