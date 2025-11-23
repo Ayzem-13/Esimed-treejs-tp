@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { CameraCharacter } from './cameraCharacter'
+import { DialogueManager } from '../dialogue/dialogueManager'
 
 export class CharacterController {
     constructor(scene, camera, initialPosition = new THREE.Vector3(0, 0, 0)) {
@@ -60,6 +61,14 @@ export class CharacterController {
 
         // NPCs pour les collisions
         this.npcs = []
+
+        // Dialogue
+        this.dialogueManager = new DialogueManager()
+        this.currentDialogue = null
+        this.nearbyNPC = null
+        this.interactionDistance = 3
+        this.wrongAnswerCount = 0
+        this.maxWrongAnswers = 3
 
         this.setupEventListeners()
     }
@@ -131,6 +140,13 @@ export class CharacterController {
                 this.exitVehicle()
             } else if (this.vehicle && this.getDistanceToVehicle() <= this.vehicleDistance) {
                 this.enterVehicle()
+            }
+        }
+
+        if (key === 'E') {
+            const nearbyNPC = this.getNearbyNPC()
+            if (nearbyNPC) {
+                this.startDialogue(nearbyNPC)
             }
         }
     }
@@ -420,14 +436,31 @@ export class CharacterController {
         let nearestInteractable = null
         let nearestDistance = interactionDistance
 
+        // Vérifier les NPCs d'abord
+        const nearbyNPC = this.getNearbyNPC()
+        if (nearbyNPC) {
+            nearestDistance = this.body.position.distanceTo(nearbyNPC.body.position)
+            if (nearestDistance < interactionDistance) {
+                nearestInteractable = {
+                    object: nearbyNPC.body,
+                    label: 'Discuter',
+                    key: 'E',
+                    callback: () => this.startDialogue(nearbyNPC),
+                    distance: nearestDistance
+                }
+                return nearestInteractable
+            }
+        }
+
+        // Puis vérifier les autres objets interactables
         this.scene.traverse((object) => {
             if (object.userData?.isInteractable) {
                 // Obtenir la position globale de l'objet
                 const worldPos = new THREE.Vector3()
                 object.getWorldPosition(worldPos)
-                
+
                 const distance = this.body.position.distanceTo(worldPos)
-                
+
                 if (distance < nearestDistance) {
                     nearestDistance = distance
                     nearestInteractable = {
@@ -442,6 +475,31 @@ export class CharacterController {
         })
 
         return nearestInteractable
+    }
+
+    getNearbyNPC() {
+        let nearestNPC = null
+        let nearestDistance = this.interactionDistance
+
+        for (const npc of this.npcs) {
+            if (!npc.body) continue
+
+            const distance = this.body.position.distanceTo(npc.body.position)
+
+            if (distance < nearestDistance) {
+                nearestDistance = distance
+                nearestNPC = npc
+            }
+        }
+
+        return nearestNPC
+    }
+
+    startDialogue(npc) {
+        if (!npc) return
+
+        this.nearbyNPC = npc
+        this.currentDialogue = this.dialogueManager.getRandomQuestion()
     }
 
     dispose() {

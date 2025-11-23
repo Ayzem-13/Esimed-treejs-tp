@@ -11,6 +11,24 @@ export const SceneProvider = ({ children }) => {
     const [gameMode, setGameMode] = useState(null); // 'character' or 'editor'
     const [isPaused, setIsPaused] = useState(false);
     const [shouldReset, setShouldReset] = useState(false);
+    const [isGameOver, setIsGameOver] = useState(false);
+
+    const resetToMenu = () => {
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        }
+        document.body.style.cursor = 'auto';
+
+        if (appInstance) {
+            appInstance.dispose();
+        }
+
+        setGameMode(null);
+        setMenuClosed(false);
+        setShouldReset(true);
+        setIsPaused(false);
+        setIsGameOver(false);
+    };
 
     return (
         <SceneContext.Provider value={{
@@ -25,7 +43,10 @@ export const SceneProvider = ({ children }) => {
             isPaused,
             setIsPaused,
             shouldReset,
-            setShouldReset
+            setShouldReset,
+            isGameOver,
+            setIsGameOver,
+            resetToMenu
         }}>
             {children}
         </SceneContext.Provider>

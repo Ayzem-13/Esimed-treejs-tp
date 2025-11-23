@@ -1,0 +1,64 @@
+{
+  "questions": [
+    {
+      "question": "Super Mario Bros a été lancé sur NES en 1985?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Tetris a été créé en Amérique?",
+      "answerA": "Vrai",
+      "answerB": "Faux (créé en Russie)",
+      "correctAnswer": "B"
+    },
+    {
+      "question": "The Legend of Zelda: Ocarina of Time est sorti sur Nintendo 64?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Pac-Man s'appelait 'Puck-Man' à l'origine?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Sonic est la mascotte officielle de Nintendo?",
+      "answerA": "Vrai",
+      "answerB": "Faux (c'est Sega)",
+      "correctAnswer": "B"
+    },
+    {
+      "question": "Final Fantasy VI a été publié sur SNES?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Minecraft a été publié pour la première fois en 2009?",
+      "answerA": "Vrai",
+      "answerB": "Faux (2011)",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Half-Life 3 a été officiellement annoncé?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "B"
+    },
+    {
+      "question": "The Elder Scrolls V: Skyrim est sorti en 2011?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Pokémon Red & Blue sont sortis en 1996 au Japon?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    }
+  ]
+}
