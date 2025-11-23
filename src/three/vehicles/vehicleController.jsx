@@ -40,7 +40,6 @@ export class VehicleController {
         this.emissionTimer = 0
         this.emissionRate = 0.1
 
-        // NPCs pour les collisions
         this.npcs = []
 
         this.loadVehicleMesh()
@@ -220,7 +219,7 @@ export class VehicleController {
         return isColliding
     }
 
-    update(deltaTime = 1/60) {
+    update(deltaTime = 1 / 60) {
         if (!this.mesh || !this.isLoaded) return
 
         let moveForward = this.currentMoveForward || 0

@@ -57,7 +57,7 @@ export class Application {
         this.npcs = []
         if (this.gameMode === 'character') {
             this.initCharacter()
-            this.initNPCs()
+            this.initNPCs(this.character.collisionManager)
         }
 
         this.selectedObject = null
@@ -190,13 +190,14 @@ export class Application {
         }
     }
 
-    initNPCs() {
+    initNPCs(collisionManager) {
         // Créer et ajouter des NPCs à la map
         const npc1 = new NPCController(
             this.scene.scene,
             '/models/character/Woman.glb',
             new THREE.Vector3(5, 0, 10),
-            { scale: 0.4, rotation: 0 }
+            { scale: 0.4, rotation: 0, width: 0.8, height: 1.8, length: 0.8 },
+            collisionManager
         )
         this.npcs.push(npc1)
 
@@ -211,7 +212,7 @@ export class Application {
     }
 
     initCharacter() {
-        const spawnPosition = new THREE.Vector3(0, 1, 5)
+        const spawnPosition = new THREE.Vector3(-10, 1, 5)
         this.character = new CharacterController(
             this.scene.scene,
             this.camera.camera,
@@ -221,8 +222,8 @@ export class Application {
         // Passer les NPCs au personnage pour les collisions
         this.character.setNPCs(this.npcs)
 
-        const vehiclePosition = new THREE.Vector3(10, 1.2, 5)
-        this.vehicle = new VehicleController(this.scene.scene, vehiclePosition)
+        const vehiclePosition = new THREE.Vector3(15, 1.2, 5)
+        this.vehicle = new VehicleController(this.scene.scene, vehiclePosition, this.character.collisionManager)
         this.character.setVehicle(this.vehicle)
 
         // Passer les NPCs au véhicule pour les collisions

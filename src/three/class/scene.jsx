@@ -19,7 +19,7 @@ export class Scene {
         this.sun.shadow.camera.bottom = -100
         this.sun.shadow.camera.near = 1
         this.sun.shadow.camera.far = 200
-        this.sun.shadow.mapSize.set(4096, 4096) 
+        this.sun.shadow.mapSize.set(4096, 4096)
         this.sun.shadow.bias = -0.00005
         this.sun.shadow.normalBias = 0.03
 
@@ -37,7 +37,7 @@ export class Scene {
     addGround(params) {
         const planeSize = 5000
         // init texture ou couleur
-        const planeMatPBR = params.useTexture 
+        const planeMatPBR = params.useTexture
             ? createStandardMaterial(params.texture, params.repeats)
             : createStandardMaterial(params.color, params.repeats)
         const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
@@ -46,12 +46,13 @@ export class Scene {
         this.ground = new THREE.Mesh(planeGeo, planeMatPBR)
         this.ground.rotation.x = Math.PI * -.5
         this.ground.receiveShadow = true
+        this.ground.userData.isSelectable = true
 
         this.scene.add(this.ground)
     }
 
     changeGround(params) {
-        this.ground.material = params.useTexture 
+        this.ground.material = params.useTexture
             ? createStandardMaterial(params.texture, params.repeats)
             : createStandardMaterial(params.color, params.repeats)
     }
@@ -59,7 +60,7 @@ export class Scene {
     addCube() {
         const geometry = new THREE.BoxGeometry(1, 1, 1)
         const material = new THREE.MeshPhongMaterial({
-            color: 0xFF0000,  
+            color: 0xFF0000,
             flatShading: true,
         })
         const cube = new THREE.Mesh(geometry, material)
@@ -111,7 +112,7 @@ export class Scene {
                 if (o.isMesh) {
                     o.userData = {
                         isSelectable: true,
-                        object : mesh,
+                        object: mesh,
                     };
                 }
             })
@@ -145,7 +146,7 @@ export class Scene {
                 toExport.add(obj.userData.object);
             }
         });
-        toExport.forEach((obj) => {  
+        toExport.forEach((obj) => {
             exportData.nodes.push({
                 name: obj.name || '',
                 position: `${obj.position.x},${obj.position.y},${obj.position.z}`,
@@ -173,9 +174,9 @@ export class Scene {
                 objectsToRemove.add(obj.userData.object)
             }
         })
-        objectsToRemove.forEach((obj) => {  
+        objectsToRemove.forEach((obj) => {
             this.scene.remove(obj)
-        })        
+        })
     }
 
     async importScene(event, params) {

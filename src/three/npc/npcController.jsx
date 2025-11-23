@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 
 export class NPCController {
-    constructor(scene, npcPath, position = new THREE.Vector3(0, 0, 0), options = {}) {
+    constructor(scene, npcPath, position = new THREE.Vector3(0, 0, 0), options = {}, collisionManager = null) {
         this.scene = scene
         this.npcPath = npcPath
         this.position = position.clone()
@@ -22,7 +22,9 @@ export class NPCController {
         this.currentAction = null
         this.autoPlayAnimation = options.autoPlayAnimation ?? false
 
-        
+        // Collision
+        this.collisionManager = collisionManager
+        this.debugMesh = null
         this.width = options.width || 0.5
         this.height = options.height || 1.8
         this.length = options.length || 0.5
@@ -128,11 +130,37 @@ export class NPCController {
         return this.animations.map(anim => anim.name)
     }
 
+    /**
+     * Affiche la boîte de collision du NPC pour le debug (désactivé)
+     */
+    debugDrawBox() {
+        // Debug désactivé
+    }
 
-    update(deltaTime = 1/60) {
+    /**
+     * Nettoie le mesh de debug
+     */
+    clearDebugBox() {
+        if (this.debugMesh) {
+            this.scene.remove(this.debugMesh)
+            this.debugMesh.geometry.dispose()
+            this.debugMesh.material.dispose()
+            this.debugMesh = null
+        }
+    }
+
+    update(deltaTime = 1 / 60) {
         if (this.mixer) {
             this.mixer.update(deltaTime)
         }
+
+        // Synchroniser la position avec le body pour les collisions
+        if (this.body) {
+            this.position.copy(this.body.position)
+        }
+
+        // Nettoyer les debug meshes
+        this.clearDebugBox()
     }
 
 

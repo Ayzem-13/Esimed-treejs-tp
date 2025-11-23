@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { CameraCharacter } from './cameraCharacter'
 import { DialogueManager } from '../dialogue/dialogueManager'
+import { CollisionManager } from '../collision/collisionManager'
 
 export class CharacterController {
     constructor(scene, camera, initialPosition = new THREE.Vector3(0, 0, 0)) {
@@ -28,9 +29,9 @@ export class CharacterController {
         this.velocity = new THREE.Vector3(0, 0, 0)
         this.moveDirection = new THREE.Vector3(0, 0, 0)
         this.isGrounded = true
-        this.gravity = 9.8  
-        this.moveSpeed = 5   
-        this.jumpForce = 6   
+        this.gravity = 9.8
+        this.moveSpeed = 5
+        this.jumpForce = 6
 
         this.bodyRotation = 0
         this.rotationSpeed = 0.08
@@ -47,7 +48,9 @@ export class CharacterController {
         // Véhicule
         this.vehicle = null
         this.inVehicle = false
-        this.vehicleDistance = 3 
+        this.vehicleDistance = 3
+        this.ignoreVehicleCollision = false
+        this.ignoreVehicleTimer = 0
 
         // Touche
         this.keys = {
@@ -61,6 +64,10 @@ export class CharacterController {
 
         // NPCs pour les collisions
         this.npcs = []
+
+        // Collision Manager
+        this.collisionManager = new CollisionManager(scene)
+        this.collisionManager.setupBVH()
 
         // Dialogue
         this.dialogueManager = new DialogueManager()
@@ -84,7 +91,7 @@ export class CharacterController {
             '/models/character/Adventurer.glb',
             (gltf) => {
                 this.mesh = gltf.scene
-                this.mesh.position.y = -0.9 
+                this.mesh.position.y = -0.9
                 this.mesh.scale.set(1.2, 1.2, 1.2)
 
                 this.mesh.traverse((child) => {
@@ -124,6 +131,7 @@ export class CharacterController {
 
     handleKeyDown(event) {
         const key = event.key.toUpperCase()
+
         if (key in this.keys) {
             this.keys[key] = true
             event.preventDefault()
@@ -185,119 +193,30 @@ export class CharacterController {
      * @returns {boolean} - True si une collision est détectée, sinon false
      */
     checkCollision(position) {
-        const halfSize = 0.25
-        const height = 1.8
-        const bottomMargin = 0.6
-
-        const min = new THREE.Vector3(
-            position.x - halfSize,
-            position.y - height / 2 + bottomMargin,
-            position.z - halfSize
-        )
-        const max = new THREE.Vector3(
-            position.x + halfSize,
-            position.y + height / 2,
-            position.z + halfSize
-        )
-        const charBox = new THREE.Box3(min, max)
-
-        let isColliding = false
-
-        // Vérifier collision avec le véhicule
-        if (this.vehicle && !this.inVehicle) {
-            const vehicleHalfWidth = this.vehicle.width / 2
-            const vehicleHalfLength = this.vehicle.length / 2
-            const vehicleBottomMargin = 0.3
-
-            const vehicleMin = new THREE.Vector3(
-                this.vehicle.position.x - vehicleHalfWidth,
-                this.vehicle.position.y - this.vehicle.height / 2 + vehicleBottomMargin,
-                this.vehicle.position.z - vehicleHalfLength
-            )
-            const vehicleMax = new THREE.Vector3(
-                this.vehicle.position.x + vehicleHalfWidth,
-                this.vehicle.position.y + this.vehicle.height / 2,
-                this.vehicle.position.z + vehicleHalfLength
-            )
-            const vehicleBox = new THREE.Box3(vehicleMin, vehicleMax)
-
-            if (charBox.intersectsBox(vehicleBox)) {
-                const vehicleCenter = new THREE.Vector3()
-                vehicleBox.getCenter(vehicleCenter)
-
-                const currentDist = this.body.position.distanceTo(vehicleCenter)
-                const newDist = position.distanceTo(vehicleCenter)
-
-                if (newDist < currentDist) {
-                    isColliding = true
-                }
-            }
-        }
-
-        // Vérifier collision avec les NPCs
-        if (!isColliding && this.npcs && this.npcs.length > 0) {
-            for (const npc of this.npcs) {
-                if (!npc.body) continue
-
-                const npcHalfWidth = npc.width / 2
-                const npcHalfLength = npc.length / 2
-                const npcBottomMargin = 0.3
-
-                const npcMin = new THREE.Vector3(
-                    npc.body.position.x - npcHalfWidth,
-                    npc.body.position.y - npc.height / 2 + npcBottomMargin,
-                    npc.body.position.z - npcHalfLength
-                )
-                const npcMax = new THREE.Vector3(
-                    npc.body.position.x + npcHalfWidth,
-                    npc.body.position.y + npc.height / 2,
-                    npc.body.position.z + npcHalfLength
-                )
-                const npcBox = new THREE.Box3(npcMin, npcMax)
-
-                if (charBox.intersectsBox(npcBox)) {
-                    const npcCenter = new THREE.Vector3()
-                    npcBox.getCenter(npcCenter)
-
-                    const currentDist = this.body.position.distanceTo(npcCenter)
-                    const newDist = position.distanceTo(npcCenter)
-
-                    if (newDist < currentDist) {
-                        isColliding = true
-                        break
-                    }
-                }
-            }
-        }
-
-        if (!isColliding) {
-            this.scene.traverse((object) => {
-                if (isColliding) return
-                if (object === this.mesh) return
-                if (object === this.body) return
-                if (object.isMesh && object.userData?.isSelectable) {
-                    const objBox = new THREE.Box3().setFromObject(object)
-                    if (charBox.intersectsBox(objBox)) {
-                        const objCenter = new THREE.Vector3()
-                        objBox.getCenter(objCenter)
-
-                        const currentDist = this.body.position.distanceTo(objCenter)
-                        const newDist = position.distanceTo(objCenter)
-
-                        if (newDist < currentDist) {
-                            isColliding = true
-                        }
-                    }
-                }
-            })
-        }
-
-        return isColliding
+        return this.collisionManager.checkCollision({
+            currentPos: this.body.position,
+            newPos: position,
+            vehicle: this.vehicle,
+            inVehicle: this.inVehicle,
+            ignoreVehicleCollision: this.ignoreVehicleCollision,
+            npcs: this.npcs,
+            characterMesh: this.mesh,
+            characterBody: this.body
+        })
     }
 
-    update(deltaTime = 1/60) {
+    update(deltaTime = 1 / 60) {
         if (this.mixer) {
             this.mixer.update(deltaTime)
+        }
+
+        // Décrémenter le timer pour ignorer les collisions avec le véhicule
+        if (this.ignoreVehicleTimer > 0) {
+            this.ignoreVehicleTimer -= deltaTime
+            if (this.ignoreVehicleTimer <= 0) {
+                this.ignoreVehicleTimer = 0
+                this.ignoreVehicleCollision = false
+            }
         }
 
         let moveForward = 0
@@ -346,12 +265,13 @@ export class CharacterController {
             nextPosition.x += this.velocity.x * deltaTime
             nextPosition.z += this.velocity.z * deltaTime
 
-            if (!this.checkCollision(nextPosition)) {
-                this.body.position.x = nextPosition.x
-                this.body.position.z = nextPosition.z
-            } else {
+            // Tester les collisions seulement si le personnage n'est pas dans le véhicule
+            if (!this.inVehicle && this.checkCollision(nextPosition)) {
                 this.velocity.x = 0
                 this.velocity.z = 0
+            } else {
+                this.body.position.x = nextPosition.x
+                this.body.position.z = nextPosition.z
             }
 
             this.body.position.y += this.velocity.y * deltaTime
@@ -399,15 +319,21 @@ export class CharacterController {
         this.vehicle.show()
         this.body.visible = true
 
-        const exitOffset = new THREE.Vector3(2, 0, 0)
+        // Ignorer les collisions avec le véhicule pendant 1 seconde
+        // IMPORTANT: Activer AVANT de calculer la position de sortie
+        this.ignoreVehicleCollision = true
+        this.ignoreVehicleTimer = 1.0
+
+        // Augmenter la distance de sortie pour éviter d'être dans la hitbox
+        const exitOffset = new THREE.Vector3(3.5, 0, 0)
         exitOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.vehicle.rotation)
         const exitPosition = this.vehicle.position.clone().add(exitOffset)
-        exitPosition.y = 1 
+        exitPosition.y = 1
 
         if (!this.checkCollision(exitPosition)) {
             this.body.position.copy(exitPosition)
         } else {
-            const altOffset = new THREE.Vector3(-2, 0, 0)
+            const altOffset = new THREE.Vector3(-3.5, 0, 0)
             altOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.vehicle.rotation)
             const altPosition = this.vehicle.position.clone().add(altOffset)
             altPosition.y = 1
@@ -416,11 +342,21 @@ export class CharacterController {
                 this.body.position.copy(altPosition)
             } else {
 
-                const frontOffset = new THREE.Vector3(0, 0, 2)
+                const frontOffset = new THREE.Vector3(0, 0, 3.5)
                 frontOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.vehicle.rotation)
                 const frontPosition = this.vehicle.position.clone().add(frontOffset)
                 frontPosition.y = 1
-                this.body.position.copy(frontPosition)
+
+                if (!this.checkCollision(frontPosition)) {
+                    this.body.position.copy(frontPosition)
+                } else {
+                    // En dernier recours, placer derrière le véhicule
+                    const backOffset = new THREE.Vector3(0, 0, -3.5)
+                    backOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.vehicle.rotation)
+                    const backPosition = this.vehicle.position.clone().add(backOffset)
+                    backPosition.y = 1
+                    this.body.position.copy(backPosition)
+                }
             }
         }
 
@@ -509,6 +445,10 @@ export class CharacterController {
 
         if (this.cameraController) {
             this.cameraController.dispose()
+        }
+
+        if (this.collisionManager) {
+            this.collisionManager.dispose()
         }
     }
 }
