@@ -305,8 +305,8 @@ export class CharacterController {
 
         if (this.keys.Z) moveForward = 1
         if (this.keys.S) moveForward = -1
-        if (this.keys.D) turnSpeed = 1
-        if (this.keys.Q) turnSpeed = -1
+        if (this.keys.D) turnSpeed = -1
+        if (this.keys.Q) turnSpeed = 1
 
         if (this.inVehicle && this.vehicle) {
             this.vehicle.setInput(moveForward, turnSpeed)
