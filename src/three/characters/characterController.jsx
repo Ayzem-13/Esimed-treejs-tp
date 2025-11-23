@@ -58,7 +58,14 @@ export class CharacterController {
             F: false
         }
 
+        // NPCs pour les collisions
+        this.npcs = []
+
         this.setupEventListeners()
+    }
+
+    setNPCs(npcs) {
+        this.npcs = npcs
     }
 
     createCharacterMesh() {
@@ -136,6 +143,12 @@ export class CharacterController {
         }
     }
 
+
+    /**
+     * Joue l'animation appropriée des qu'il ce deplace ou s'arrete
+     * @param {boolean} isMoving - Indique si le personnage est en mouvement
+     * @returns {void}
+     */
     playAnimation(isMoving) {
         if (!this.mixer || !this.idleAction || !this.walkAction) return
 
@@ -150,6 +163,11 @@ export class CharacterController {
         }
     }
 
+    /**
+     * Vérifie les collisions avec le véhicule, les NPCs et les objets sélectionnables dans la scène
+     * @param {THREE.Vector3} position - Position à vérifier
+     * @returns {boolean} - True si une collision est détectée, sinon false
+     */
     checkCollision(position) {
         const halfSize = 0.25
         const height = 1.8
@@ -196,6 +214,42 @@ export class CharacterController {
 
                 if (newDist < currentDist) {
                     isColliding = true
+                }
+            }
+        }
+
+        // Vérifier collision avec les NPCs
+        if (!isColliding && this.npcs && this.npcs.length > 0) {
+            for (const npc of this.npcs) {
+                if (!npc.body) continue
+
+                const npcHalfWidth = npc.width / 2
+                const npcHalfLength = npc.length / 2
+                const npcBottomMargin = 0.3
+
+                const npcMin = new THREE.Vector3(
+                    npc.body.position.x - npcHalfWidth,
+                    npc.body.position.y - npc.height / 2 + npcBottomMargin,
+                    npc.body.position.z - npcHalfLength
+                )
+                const npcMax = new THREE.Vector3(
+                    npc.body.position.x + npcHalfWidth,
+                    npc.body.position.y + npc.height / 2,
+                    npc.body.position.z + npcHalfLength
+                )
+                const npcBox = new THREE.Box3(npcMin, npcMax)
+
+                if (charBox.intersectsBox(npcBox)) {
+                    const npcCenter = new THREE.Vector3()
+                    npcBox.getCenter(npcCenter)
+
+                    const currentDist = this.body.position.distanceTo(npcCenter)
+                    const newDist = position.distanceTo(npcCenter)
+
+                    if (newDist < currentDist) {
+                        isColliding = true
+                        break
+                    }
                 }
             }
         }

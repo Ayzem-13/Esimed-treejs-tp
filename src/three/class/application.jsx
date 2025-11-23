@@ -4,6 +4,7 @@ import { UI } from './ui'
 import { Camera } from './camera'
 import { CharacterController } from '../characters/characterController'
 import { VehicleController } from '../vehicles/vehicleController'
+import { NPCController } from '../npc/npcController'
 
 export class Application {
 
@@ -53,8 +54,10 @@ export class Application {
         this.ui.addSunUI(this.scene.sun)
 
         this.character = null
+        this.npcs = []
         if (this.gameMode === 'character') {
             this.initCharacter()
+            this.initNPCs()
         }
 
         this.selectedObject = null
@@ -153,6 +156,26 @@ export class Application {
         }
     }
 
+    initNPCs() {
+        // Créer et ajouter des NPCs à la map
+        const npc1 = new NPCController(
+            this.scene.scene,
+            '/models/character/Woman.glb',
+            new THREE.Vector3(5, 0, 10),
+            { scale: 0.4, rotation: 0 }
+        )
+        this.npcs.push(npc1)
+
+        // Attendre que le NPC soit chargé puis configurer l'animation
+        setTimeout(() => {
+            if (npc1.isLoaded) {
+                console.log('Animations disponibles:', npc1.getAnimationNames())
+                npc1.playAnimation(1)
+            }
+        }, 500)
+
+    }
+
     initCharacter() {
         const spawnPosition = new THREE.Vector3(0, 1, 5)
         this.character = new CharacterController(
@@ -161,9 +184,15 @@ export class Application {
             spawnPosition
         )
 
+        // Passer les NPCs au personnage pour les collisions
+        this.character.setNPCs(this.npcs)
+
         const vehiclePosition = new THREE.Vector3(10, 1.2, 5)
         this.vehicle = new VehicleController(this.scene.scene, vehiclePosition)
         this.character.setVehicle(this.vehicle)
+
+        // Passer les NPCs au véhicule pour les collisions
+        this.vehicle.setNPCs(this.npcs)
 
         this.camera.controls.enabled = false
         this.globalParams.useWASD = true
@@ -285,6 +314,10 @@ export class Application {
         if (this.vehicle) {
             this.vehicle.update(deltaTime)
         }
+        // Mettre à jour les animations des NPCs
+        for (const npc of this.npcs) {
+            npc.update(deltaTime)
+        }
         this.camera.process(this.globalParams)
         this.sunHelper.update()
         this.renderer.render(this.scene.scene, this.camera.camera)
@@ -297,6 +330,16 @@ export class Application {
         if (this.character) {
             this.character.dispose()
         }
+
+        if (this.vehicle) {
+            this.vehicle.dispose()
+        }
+
+        // Nettoyer les NPCs
+        for (const npc of this.npcs) {
+            npc.dispose()
+        }
+        this.npcs = []
 
         if (this.camera) {
             this.camera.dispose()

@@ -40,7 +40,14 @@ export class VehicleController {
         this.emissionTimer = 0
         this.emissionRate = 0.1
 
+        // NPCs pour les collisions
+        this.npcs = []
+
         this.loadVehicleMesh()
+    }
+
+    setNPCs(npcs) {
+        this.npcs = npcs
     }
 
     loadVehicleMesh() {
@@ -121,6 +128,11 @@ export class VehicleController {
         this.currentTurnSpeed = 0
     }
 
+    /**
+     * Vérifie les collisions
+     * @param {THREE.Vector3} position - Position à vérifier
+     * @returns {boolean} - True si une collision est détectée, sinon false
+     */
     checkCollision(position) {
         const halfWidth = this.width / 2
         const halfLength = this.length / 2
@@ -139,24 +151,64 @@ export class VehicleController {
         const vehicleBox = new THREE.Box3(min, max)
 
         let isColliding = false
-        this.scene.traverse((object) => {
-            if (isColliding) return
-            if (object === this.mesh) return
-            if (object.isMesh && object.userData?.isSelectable) {
-                const objBox = new THREE.Box3().setFromObject(object)
-                if (vehicleBox.intersectsBox(objBox)) {
-                    const objCenter = new THREE.Vector3()
-                    objBox.getCenter(objCenter)
 
-                    const currentDist = this.position.distanceTo(objCenter)
-                    const newDist = position.distanceTo(objCenter)
+        // Vérifier collision avec les NPCs
+        if (this.npcs && this.npcs.length > 0) {
+            for (const npc of this.npcs) {
+                if (!npc.body) continue
+
+                const npcHalfWidth = npc.width / 2
+                const npcHalfLength = npc.length / 2
+                const npcBottomMargin = 0.3
+
+                const npcMin = new THREE.Vector3(
+                    npc.body.position.x - npcHalfWidth,
+                    npc.body.position.y - npc.height / 2 + npcBottomMargin,
+                    npc.body.position.z - npcHalfLength
+                )
+                const npcMax = new THREE.Vector3(
+                    npc.body.position.x + npcHalfWidth,
+                    npc.body.position.y + npc.height / 2,
+                    npc.body.position.z + npcHalfLength
+                )
+                const npcBox = new THREE.Box3(npcMin, npcMax)
+
+                if (vehicleBox.intersectsBox(npcBox)) {
+                    const npcCenter = new THREE.Vector3()
+                    npcBox.getCenter(npcCenter)
+
+                    const currentDist = this.position.distanceTo(npcCenter)
+                    const newDist = position.distanceTo(npcCenter)
 
                     if (newDist < currentDist) {
                         isColliding = true
+                        break
                     }
                 }
             }
-        })
+        }
+
+        // Vérifier collision avec les objets de la scène
+        if (!isColliding) {
+            this.scene.traverse((object) => {
+                if (isColliding) return
+                if (object === this.mesh) return
+                if (object.isMesh && object.userData?.isSelectable) {
+                    const objBox = new THREE.Box3().setFromObject(object)
+                    if (vehicleBox.intersectsBox(objBox)) {
+                        const objCenter = new THREE.Vector3()
+                        objBox.getCenter(objCenter)
+
+                        const currentDist = this.position.distanceTo(objCenter)
+                        const newDist = position.distanceTo(objCenter)
+
+                        if (newDist < currentDist) {
+                            isColliding = true
+                        }
+                    }
+                }
+            })
+        }
 
         return isColliding
     }
