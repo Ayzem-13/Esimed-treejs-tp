@@ -101,6 +101,13 @@ export class VehicleController {
                 this.scene.add(this.mesh)
                 this.isLoaded = true
 
+                // Marquer le véhicule comme interactif
+                this.mesh.userData = {
+                    isInteractable: true,
+                    interactionLabel: 'Entrer',
+                    interactionKey: 'F'
+                }
+
                 let steeringCount = 0
                 for (const wheel of this.wheels) {
                     if (steeringCount < 2) {

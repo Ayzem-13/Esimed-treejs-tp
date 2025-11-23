@@ -415,6 +415,35 @@ export class CharacterController {
         console.log('Sorti du véhicule!')
     }
 
+    getNearbyInteractable() {
+        const interactionDistance = 3
+        let nearestInteractable = null
+        let nearestDistance = interactionDistance
+
+        this.scene.traverse((object) => {
+            if (object.userData?.isInteractable) {
+                // Obtenir la position globale de l'objet
+                const worldPos = new THREE.Vector3()
+                object.getWorldPosition(worldPos)
+                
+                const distance = this.body.position.distanceTo(worldPos)
+                
+                if (distance < nearestDistance) {
+                    nearestDistance = distance
+                    nearestInteractable = {
+                        object: object,
+                        label: object.userData.interactionLabel || 'Interagir',
+                        key: object.userData.interactionKey || 'E',
+                        callback: object.userData.onInteract,
+                        distance: distance
+                    }
+                }
+            }
+        })
+
+        return nearestInteractable
+    }
+
     dispose() {
         if (this.body && this.body.parent) {
             this.body.parent.remove(this.body)

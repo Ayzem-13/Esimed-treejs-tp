@@ -5,6 +5,7 @@ import { StartMenu } from './components/StartMenu';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PauseMenu } from './components/PauseMenu';
 import { Speedometer } from './components/Speedometer';
+import { InteractionPrompt } from './components/InteractionPrompt';
 import { useScene } from './context/SceneContext';
 
 function AppContent() {
@@ -83,6 +84,7 @@ function AppContent() {
       )}
       <LoadingScreen isLoading={isLoading} />
       <Speedometer />
+      <InteractionPrompt />
       <PauseMenu
         isOpen={isPaused}
         onClose={handlePauseToggle}
