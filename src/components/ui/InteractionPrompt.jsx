@@ -33,25 +33,27 @@ export function InteractionPrompt() {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed right-16 top-1/2 -translate-y-1/2 z-3">
+        <div className="fixed right-8 top-1/2 -translate-y-1/2 z-30">
             <div
-                className="flex items-center bg-gray-700 px-4 py-2 rounded"
+                className="px-4 py-3 rounded-lg flex items-center gap-3"
+                style={{
+                    background: '#242424',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
             >
-                {/* Touche  */}
-                <div className="rounded px-2 py-1 flex items-center justify-center">
-                    <span
-                        className="text-xs font-bold text-gray-200 font-mono"
-                    >
-                        [{interactionKey}]
-                    </span>
-                </div>
-                {/* Label */}
-                <span
-                    className="text-sm font-bold text-gray-100 uppercase tracking-wide"
+                {/* Touche */}
+                <div 
+                    className="px-3 py-1 rounded-md font-mono font-bold text-sm"
                     style={{
-                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+                        background: 'rgba(26, 119, 203, 0.15)',
+                        border: '1px solid rgba(26, 119, 203, 0.3)',
+                        color: '#1a77cb'
                     }}
                 >
+                    {interactionKey}
+                </div>
+                {/* Label */}
+                <span className="text-sm font-medium text-white">
                     {interactionLabel}
                 </span>
             </div>

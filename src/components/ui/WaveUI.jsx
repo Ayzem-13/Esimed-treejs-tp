@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useScene } from '../../context/SceneContext';
+import { Waves } from 'lucide-react';
 
 function arabicToRoman(num) {
     const romanMatrix = [
@@ -58,19 +59,40 @@ export function WaveUI() {
     const romanWave = arabicToRoman(wave);
 
     return (
-        <div className="fixed top-5 left-5 z-50">
-            <div className="flex flex-col items-center gap-1">
-                <div
-                    className={`text-6xl font-bold text-red-600 transition-all duration-600 transform ${
-                        isAnimating ? 'scale-125 opacity-50' : 'scale-100 opacity-100'
-                    }`}
+        <div className="fixed top-6 left-6 z-50">
+            <div 
+                className="px-6 py-3 rounded-lg flex items-center gap-3"
+                style={{
+                    background: '#242424',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+            >
+                {/* Icon */}
+                <div 
+                    className="w-8 h-8 rounded-md flex items-center justify-center"
                     style={{
-                        textShadow: '0 0 20px rgba(239, 68, 68, 0.6)',
-                        fontVariant: 'small-caps',
-                        letterSpacing: '6px'
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)'
                     }}
                 >
-                    {romanWave}
+                    <Waves className="w-4 h-4 text-red-400" />
+                </div>
+
+                {/* Wave number */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/50 font-medium uppercase tracking-wide">Manche</span>
+                    <span 
+                        className={`text-2xl font-bold transition-all duration-600 ${
+                            isAnimating ? 'scale-110' : 'scale-100'
+                        }`}
+                        style={{
+                            color: '#ef4444',
+                            fontVariant: 'small-caps',
+                            letterSpacing: '2px'
+                        }}
+                    >
+                        {romanWave}
+                    </span>
                 </div>
             </div>
         </div>

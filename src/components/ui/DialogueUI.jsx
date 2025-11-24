@@ -159,55 +159,143 @@ export function DialogueUI() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-            <div className="mx-auto max-w-2xl p-4 pointer-events-auto mb-4">
-                <div className="bg-white rounded-lg shadow-lg p-5 border-l-4 border-blue-500">
-                    {/* Progression */}
-                    <div className="mb-3 text-sm text-gray-500">
-                        {progressCorrect}/{progressTotal}
+            <div className="mx-auto max-w-2xl p-6 pointer-events-auto mb-6">
+                <div 
+                    className="rounded-xl p-6"
+                    style={{
+                        background: '#242424',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                >
+                    {/* Header avec progression */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                            <div 
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: '#1a77cb' }}
+                            />
+                            <span className="text-sm font-medium text-white/70">Question</span>
+                        </div>
+                        <div 
+                            className="px-3 py-1 rounded-md text-xs font-medium"
+                            style={{
+                                background: 'rgba(26, 119, 203, 0.15)',
+                                border: '1px solid rgba(26, 119, 203, 0.3)',
+                                color: '#1a77cb'
+                            }}
+                        >
+                            {progressCorrect}/{progressTotal}
+                        </div>
                     </div>
 
                     {/* Question */}
-                    <div className="mb-4">
-                        <p className="text-gray-900 text-base font-semibold">
+                    <div className="mb-6">
+                        <p className="text-white text-lg font-medium leading-relaxed">
                             {question}
                         </p>
                     </div>
 
                     {/* Réponses */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <button
                             onClick={() => !feedback && handleAnswer('A')}
                             disabled={!!feedback}
-                            className={`w-full text-left p-3 rounded border-l-4 transition-colors ${
-                                selectedAnswer === 'A'
+                            className="w-full text-left px-4 py-3 rounded-lg transition-all duration-200"
+                            style={{
+                                background: selectedAnswer === 'A'
                                     ? feedback === 'Correct!'
-                                        ? 'bg-green-100 border-green-500 text-green-900'
-                                        : 'bg-red-100 border-red-500 text-red-900'
-                                    : 'bg-gray-100 border-gray-300 text-gray-900 hover:bg-gray-200'
-                            } ${feedback ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                        ? 'rgba(34, 197, 94, 0.15)'
+                                        : 'rgba(239, 68, 68, 0.15)'
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                border: selectedAnswer === 'A'
+                                    ? feedback === 'Correct!'
+                                        ? '1px solid rgba(34, 197, 94, 0.3)'
+                                        : '1px solid rgba(239, 68, 68, 0.3)'
+                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                cursor: feedback ? 'not-allowed' : 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!feedback) {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!feedback && selectedAnswer !== 'A') {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                                }
+                            }}
                         >
-                            <span className="font-semibold">* {answerA}</span>
+                            <span 
+                                className="font-medium"
+                                style={{
+                                    color: selectedAnswer === 'A'
+                                        ? feedback === 'Correct!'
+                                            ? '#22c55e'
+                                            : '#ef4444'
+                                        : '#ffffff'
+                                }}
+                            >
+                                A. {answerA}
+                            </span>
                         </button>
+
                         <button
                             onClick={() => !feedback && handleAnswer('B')}
                             disabled={!!feedback}
-                            className={`w-full text-left p-3 rounded border-l-4 transition-colors ${
-                                selectedAnswer === 'B'
+                            className="w-full text-left px-4 py-3 rounded-lg transition-all duration-200"
+                            style={{
+                                background: selectedAnswer === 'B'
                                     ? feedback === 'Correct!'
-                                        ? 'bg-green-100 border-green-500 text-green-900'
-                                        : 'bg-red-100 border-red-500 text-red-900'
-                                    : 'bg-gray-100 border-gray-300 text-gray-900 hover:bg-gray-200'
-                            } ${feedback ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                        ? 'rgba(34, 197, 94, 0.15)'
+                                        : 'rgba(239, 68, 68, 0.15)'
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                border: selectedAnswer === 'B'
+                                    ? feedback === 'Correct!'
+                                        ? '1px solid rgba(34, 197, 94, 0.3)'
+                                        : '1px solid rgba(239, 68, 68, 0.3)'
+                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                cursor: feedback ? 'not-allowed' : 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!feedback) {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!feedback && selectedAnswer !== 'B') {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                                }
+                            }}
                         >
-                            <span className="font-semibold">* {answerB}</span>
+                            <span 
+                                className="font-medium"
+                                style={{
+                                    color: selectedAnswer === 'B'
+                                        ? feedback === 'Correct!'
+                                            ? '#22c55e'
+                                            : '#ef4444'
+                                        : '#ffffff'
+                                }}
+                            >
+                                B. {answerB}
+                            </span>
                         </button>
                     </div>
 
                     {/* Feedback */}
                     {feedback && (
-                        <div className={`mt-4 text-center font-bold ${
-                            feedback === 'Correct!' ? 'text-green-600' : 'text-red-600'
-                        }`}>
+                        <div 
+                            className="mt-4 text-center font-medium py-2 px-4 rounded-lg"
+                            style={{
+                                background: feedback === 'Correct!' 
+                                    ? 'rgba(34, 197, 94, 0.15)' 
+                                    : 'rgba(239, 68, 68, 0.15)',
+                                border: feedback === 'Correct!'
+                                    ? '1px solid rgba(34, 197, 94, 0.3)'
+                                    : '1px solid rgba(239, 68, 68, 0.3)',
+                                color: feedback === 'Correct!' ? '#22c55e' : '#ef4444'
+                            }}
+                        >
                             {feedback}
                         </div>
                     )}

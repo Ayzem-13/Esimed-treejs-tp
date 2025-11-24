@@ -31,9 +31,14 @@ export function ScoreHUD() {
     return (
         <div
             key={forceUpdate}
-            className="fixed top-5 right-5 bg-black/70 text-white px-4 py-2 rounded font-mono text-base"
+            className="fixed top-6 right-6 px-4 py-2 rounded-lg flex items-center gap-2"
+            style={{
+                background: '#242424',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
         >
-            Score : {score}
+            <div className="text-sm text-white/50 font-medium">Score:</div>
+            <div className="text-xl font-bold text-white tabular-nums">{score}</div>
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useScene } from '../../context/SceneContext';
+import { Gauge } from 'lucide-react';
 
 export function Speedometer() {
   const { appInstance } = useScene();
@@ -30,18 +31,31 @@ export function Speedometer() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-8 left-8 z-20">
-      <div className="flex items-center gap-3">
-        {/* Speed number - large */}
-        <div className="text-6xl font-black font-mono text-white leading-none" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
-          {speed.toString().padStart(2, '0')}
+    <div className="fixed bottom-20 left-6 z-20">
+      <div 
+        className="px-4 py-3 rounded-lg flex items-center gap-3"
+        style={{
+          background: '#242424',
+          border: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
+      >
+        {/* Icon */}
+        <div 
+          className="w-10 h-10 rounded-md flex items-center justify-center"
+          style={{
+            background: 'rgba(26, 119, 203, 0.15)',
+            border: '1px solid rgba(26, 119, 203, 0.3)'
+          }}
+        >
+          <Gauge className="w-5 h-5 text-blue-400" />
         </div>
-
-        {/* km/h badge */}
-        <div className="flex flex-col gap-1">
-          <div className="w-2 h-2 bg-white rounded-full"></div>
-          <div className="bg-black border border-gray-600 rounded px-2 py-1">
-            <div className="text-xs font-bold text-white font-mono">km/h</div>
+        
+        {/* Speed display */}
+        <div>
+          <div className="text-xs text-white/50 font-medium uppercase tracking-wide">Vitesse</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-white tabular-nums">{speed}</span>
+            <span className="text-sm text-white/60 font-medium">km/h</span>
           </div>
         </div>
       </div>
