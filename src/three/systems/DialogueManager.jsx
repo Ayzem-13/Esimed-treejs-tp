@@ -83,7 +83,7 @@ export class DialogueManager {
     getProgress() {
         return {
             correct: this.correctlyAnswered.length,
-            total: this.questions.length
+            total: this.questions.length || 10
         };
     }
 

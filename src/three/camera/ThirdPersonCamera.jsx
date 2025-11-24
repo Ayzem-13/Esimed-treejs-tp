@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu'
 
-export class CameraCharacter {
+export class ThirdPersonCamera {
     constructor(camera, character) {
         this.camera = camera
         this.character = character

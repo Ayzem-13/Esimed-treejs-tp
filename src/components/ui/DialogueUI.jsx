@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useScene } from '../context/SceneContext';
+import { useScene } from '../../context/SceneContext';
 
 export function DialogueUI() {
     const { appInstance, setIsGameOver, setIsVictory, gameMode } = useScene();

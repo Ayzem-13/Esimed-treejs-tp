@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Application } from '../three/class/application';
+import { Application } from '../three/core/Application';
 import { useScene } from '../context/SceneContext';
 
 export function CanvasContainer() {

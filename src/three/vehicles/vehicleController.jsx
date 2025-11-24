@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { ParticleSystem } from '../particles/ParticleSystem'
+import { ParticleSystem } from '../systems/ParticleSystem'
 
 export class VehicleController {
     constructor(scene, initialPosition = new THREE.Vector3(0, 0, 0)) {

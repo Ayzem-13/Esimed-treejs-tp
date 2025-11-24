@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useScene } from '../context/SceneContext';
+import { useScene } from '../../context/SceneContext';
 
 function arabicToRoman(num) {
     const romanMatrix = [

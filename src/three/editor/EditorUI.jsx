@@ -1,6 +1,6 @@
 import GUI from 'lil-gui'
 import * as THREE from 'three/webgpu'
-import { ColorGUIHelper } from '../tools'
+import { ColorGUIHelper } from '../tools.jsx'
 
 export class UI {
 

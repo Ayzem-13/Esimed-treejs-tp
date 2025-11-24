@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useScene } from '../context/SceneContext';
+import { useScene } from '../../context/SceneContext';
 
 export function ScoreHUD() {
     const { appInstance, gameMode } = useScene();

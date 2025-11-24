@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { SceneProvider } from './context/SceneContext';
+import { SceneProvider, useScene } from './context/SceneContext';
 import { CanvasContainer } from './components/CanvasContainer';
-import { StartMenu } from './components/StartMenu';
-import { LoadingScreen } from './components/LoadingScreen';
-import { PauseMenu } from './components/PauseMenu';
-import { Speedometer } from './components/Speedometer';
-import { InteractionPrompt } from './components/InteractionPrompt';
-import { DialogueUI } from './components/DialogueUI';
-import { GameOverScreen } from './components/GameOverScreen';
-import { VictoryScreen } from './components/VictoryScreen';
-import { HealthBar } from './components/HealthBar';
-import { ScoreHUD } from './components/ScoreHUD';
-import { WaveUI } from './components/WaveUI';
-import { useScene } from './context/SceneContext';
+// Screens
+import { StartMenu } from './components/screens/StartMenu';
+import { PauseMenu } from './components/screens/PauseMenu';
+import { GameOverScreen } from './components/screens/GameOverScreen';
+import { VictoryScreen } from './components/screens/VictoryScreen';
+// UI Components
+import { LoadingScreen } from './components/ui/LoadingScreen';
+import { Speedometer } from './components/ui/Speedometer';
+import { InteractionPrompt } from './components/ui/InteractionPrompt';
+import { DialogueUI } from './components/ui/DialogueUI';
+import { HealthBar } from './components/ui/HealthBar';
+import { ScoreHUD } from './components/ui/ScoreHUD';
+import { WaveUI } from './components/ui/WaveUI';
 
 function AppContent() {
   const [showStartMenu, setShowStartMenu] = useState(true);

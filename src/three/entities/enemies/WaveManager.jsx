@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu'
-import { EnemyController } from './enemyController'
+import { EnemyController } from './EnemyController'
 
 export class WaveManager {
     constructor(scene, character, collisionManager) {

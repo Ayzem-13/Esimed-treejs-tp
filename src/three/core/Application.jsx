@@ -1,12 +1,11 @@
 import * as THREE from 'three/webgpu'
-import { Scene } from './scene'
-import { UI } from './ui'
-import { Camera } from './camera'
-import { CharacterController } from '../characters/characterController'
+import { Scene } from './Scene'
+import { UI } from '../editor/EditorUI'
+import { Camera } from '../camera/Camera'
+import { PlayerController } from '../player/PlayerController'
 import { VehicleController } from '../vehicles/vehicleController'
-import { NPCController } from '../npc/npcController'
-import { EnemyController } from '../enemies/enemyController'
-import { WaveManager } from '../enemies/waveManager'
+import { NPCController } from '../entities/npc/NPCController'
+import { WaveManager } from '../entities/enemies/WaveManager'
 
 export class Application {
 
@@ -271,7 +270,7 @@ export class Application {
 
     initCharacter() {
         const spawnPosition = new THREE.Vector3(-10, 1, 5)
-        this.character = new CharacterController(
+        this.character = new PlayerController(
             this.scene.scene,
             this.camera.camera,
             spawnPosition
