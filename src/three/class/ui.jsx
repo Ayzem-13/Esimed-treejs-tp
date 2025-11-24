@@ -26,7 +26,7 @@ export class UI {
         const cityFolder = this.modelsFolder.addFolder('City Pack')
         const cityParams = { model: cityModels[0] }
         cityFolder.add(cityParams, 'model', cityModels).name('Select Model')
-        cityFolder.add({ load: () => onLoadModel('City_Pack', cityParams.model) }, 'load').name('Add to Scene')
+        cityFolder.add({ load: () => onLoadModel('', cityParams.model) }, 'load').name('Add to Scene')
     }
 
     addSelectionUI(onTransformChange, onDelete) {

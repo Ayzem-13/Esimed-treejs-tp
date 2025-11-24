@@ -46,7 +46,7 @@ export class Scene {
         this.ground = new THREE.Mesh(planeGeo, planeMatPBR)
         this.ground.rotation.x = Math.PI * -.5
         this.ground.receiveShadow = true
-        this.ground.userData.isSelectable = true
+        this.ground.userData.isSelectable = false
 
         this.scene.add(this.ground)
     }
@@ -86,25 +86,34 @@ export class Scene {
         for (const obj of data.nodes) {
             const modelNameWithoutGlb = obj.name.replace('.glb', '')
 
-            // Essayer tp d'abord
+            // Le nom contient déjà le chemin complet (ex: City_Pack/batiment/Big Building ou props/Tree)
             let mesh = null
             try {
-                const modelKey = `tp/${modelNameWithoutGlb}`
+                const modelKey = modelNameWithoutGlb
                 if (this.loadedObjects[modelKey] == undefined) {
                     this.loadedObjects[modelKey] = await loadGltf(modelKey)
                 }
                 mesh = this.loadedObjects[modelKey].clone()
             } catch (err) {
-
+                // Si échec, essayer avec tp/ comme préfixe (pour les anciens exports)
                 try {
-                    const modelKey = `City_Pack/${modelNameWithoutGlb}`
+                    const modelKey = `tp/${modelNameWithoutGlb}`
                     if (this.loadedObjects[modelKey] == undefined) {
                         this.loadedObjects[modelKey] = await loadGltf(modelKey)
                     }
                     mesh = this.loadedObjects[modelKey].clone()
                 } catch (err2) {
-                    console.warn(`Could not load model: ${obj.name}`)
-                    continue
+                    // Dernier essai avec City_Pack/ comme préfixe
+                    try {
+                        const modelKey = `City_Pack/${modelNameWithoutGlb}`
+                        if (this.loadedObjects[modelKey] == undefined) {
+                            this.loadedObjects[modelKey] = await loadGltf(modelKey)
+                        }
+                        mesh = this.loadedObjects[modelKey].clone()
+                    } catch (err3) {
+                        console.warn(`Could not load model: ${obj.name}`)
+                        continue
+                    }
                 }
             }
 

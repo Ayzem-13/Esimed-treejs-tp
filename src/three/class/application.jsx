@@ -86,7 +86,13 @@ export class Application {
         this.dragStartRotation = null
         this.dragStartScale = null
         this.dragStartMouseX = null
+        
+        // Mode placement multiple
+        this.multiPlacementMode = false
+        this.objectToPlace = null
+        
         window.addEventListener('keydown', this.handleKeyDown)
+        window.addEventListener('keyup', this.handleKeyUp.bind(this))
         document.addEventListener('mousemove', this.handleMouseMove);
 
         this.renderer.setAnimationLoop(this.render.bind(this))
@@ -94,10 +100,7 @@ export class Application {
 
     handleClick(event) {
         if (this.globalParams.useWASD) return
-        if (this.selectedObject != null) {
-            this.selectedMesh.material = this.selectedMeshMaterial
-            this.selectedObject = null
-        }
+        
         const rect = this.renderer.domElement.getBoundingClientRect()
         const mouse = new THREE.Vector2(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -105,6 +108,22 @@ export class Application {
         )
         const raycaster = new THREE.Raycaster()
         raycaster.setFromCamera(mouse, this.camera.camera)
+        
+        // Mode placement multiple avec Shift
+        if (this.multiPlacementMode && this.objectToPlace && event.shiftKey) {
+            const groundIntersect = raycaster.intersectObject(this.scene.ground, true)
+            if (groundIntersect.length > 0) {
+                this.placeObjectAtPosition(groundIntersect[0].point)
+            }
+            return
+        }
+        
+        // Mode sélection normal
+        if (this.selectedObject != null) {
+            this.selectedMesh.material = this.selectedMeshMaterial
+            this.selectedObject = null
+        }
+        
         const intersects = raycaster.intersectObjects(this.scene.scene.children, true)
         const hit = intersects.find(i => i.object && i.object.userData && i.object.userData.isSelectable)
         if (hit) {
@@ -114,12 +133,22 @@ export class Application {
             this.selectedMesh.material = new THREE.MeshStandardMaterial({ color: 0xffff00 })
             this.ui.updateSelectionUI(this.selectedObject)
             this.moveSelectedObject = false
+            
+            // Activer le mode placement multiple
+            this.objectToPlace = this.selectedObject
         } else {
             this.ui.hideSelectionUI()
         }
     }
 
     handleKeyDown(event) {
+        // Activer le mode placement multiple avec Shift
+        if (event.shiftKey && this.objectToPlace) {
+            this.multiPlacementMode = true
+            this.renderer.domElement.style.cursor = 'copy'
+            return
+        }
+        
         switch (event.code) {
             case 'KeyG':
                 this.moveSelectedObject = !this.moveSelectedObject
@@ -140,6 +169,14 @@ export class Application {
                     this.dragStartMouseX = null
                 }
                 break
+        }
+    }
+    
+    handleKeyUp(event) {
+        // Désactiver le mode placement multiple
+        if (!event.shiftKey && this.multiPlacementMode) {
+            this.multiPlacementMode = false
+            this.renderer.domElement.style.cursor = 'default'
         }
     }
 
@@ -261,6 +298,43 @@ export class Application {
         }
     }
 
+    async placeObjectAtPosition(position) {
+        if (!this.objectToPlace) return
+        
+        // Nettoyer temporairement les userData pour éviter les références circulaires
+        const originalUserData = new Map()
+        this.objectToPlace.traverse(o => {
+            if (o.userData) {
+                originalUserData.set(o, { ...o.userData })
+                delete o.userData.object
+            }
+        })
+        
+        // Cloner l'objet sélectionné
+        const clonedObject = this.objectToPlace.clone()
+        clonedObject.position.set(position.x, position.y, position.z)
+        
+        // Restaurer les userData originaux
+        this.objectToPlace.traverse(o => {
+            if (originalUserData.has(o)) {
+                o.userData = originalUserData.get(o)
+            }
+        })
+        
+        // Configurer les userData pour le clone
+        clonedObject.traverse(o => {
+            if (o.isMesh) {
+                o.userData = {
+                    isSelectable: true,
+                    object: clonedObject,
+                }
+            }
+        })
+        
+        this.scene.scene.add(clonedObject)
+        console.log(`Objet placé à la position: ${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)}`)
+    }
+    
     async handleLoadModel(folder, modelName) {
         try {
             await this.scene.addModelToScene(folder, modelName)
@@ -343,9 +417,9 @@ export class Application {
 
         // Créer un tableau plat pour compatibilité avec l'UI existante
         this.cityModels = [
-            ...this.cityModelCategories.batiment.map(m => `batiment/${m}`),
-            ...this.cityModelCategories.props.map(m => `City_Pprops/${m}`),
-            ...this.cityModelCategories.vehicules.map(m => `vehicules/${m}`)
+            ...this.cityModelCategories.batiment.map(m => `City_Pack/batiment/${m}`),
+            ...this.cityModelCategories.props.map(m => `City_Pack/props/${m}`),
+            ...this.cityModelCategories.vehicules.map(m => `City_Pack/vehicules/${m}`)
         ]
 
         this.groundTextures = [
@@ -434,8 +508,10 @@ export class Application {
 
         if (this.renderer.domElement) {
             this.renderer.domElement.removeEventListener('click', this.handleClick)
+            this.renderer.domElement.style.cursor = 'default'
         }
         window.removeEventListener('keydown', this.handleKeyDown)
+        window.removeEventListener('keyup', this.handleKeyUp)
         document.removeEventListener('mousemove', this.handleMouseMove)
 
         if (this.renderer.domElement && this.renderer.domElement.parentNode) {

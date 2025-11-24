@@ -1,21 +1,21 @@
 
 import * as THREE from 'three/webgpu'
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 export const textureloader = new THREE.TextureLoader()
 const gltfLoader = new GLTFLoader()
 
 export class ColorGUIHelper {
-  constructor(object, prop) {
-    this.object = object
-    this.prop = prop
-  }
-  get value() {
-    return `#${this.object[this.prop].getHexString()}`
-  }
-  set value(hexString) {
-    this.object[this.prop].set(hexString)
-  }
+    constructor(object, prop) {
+        this.object = object
+        this.prop = prop
+    }
+    get value() {
+        return `#${this.object[this.prop].getHexString()}`
+    }
+    set value(hexString) {
+        this.object[this.prop].set(hexString)
+    }
 }
 
 export const loadGltf = function (filename) {
@@ -29,10 +29,11 @@ export const loadGltf = function (filename) {
                 const mesh = gltf.scene
                 mesh.name = filename
                 mesh.traverse(o => {
-                if (o.isMesh) {
-                    o.castShadow = true;
-                    o.receiveShadow = true;
-                }})
+                    if (o.isMesh) {
+                        o.castShadow = true;
+                        o.receiveShadow = true;
+                    }
+                })
                 resolve(mesh)
             },
             undefined,
@@ -77,14 +78,14 @@ export const createStandardMaterial = function (textureOrColor, repeats) {
     floorTextureARM.magFilter = THREE.NearestFilter
     floorTextureARM.colorSpace = THREE.LinearSRGBColorSpace
 
-    return new THREE.MeshStandardMaterial ({
+    return new THREE.MeshStandardMaterial({
         map: floorTexture,
         normalMap: floorTextureNormal,
         aoMap: floorTextureARM,          // R
         roughnessMap: floorTextureARM,   // G
         metalnessMap: floorTextureARM,   // B
-        roughness: 1.0,       
-        metalness: 1.0,      
+        roughness: 1.0,
+        metalness: 1.0,
     })
 
 }
