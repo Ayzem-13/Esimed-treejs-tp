@@ -159,7 +159,6 @@ export class CharacterController {
         if (this.shootCooldown > 0) return
 
         this.shootCooldown = this.shootRate
-        // console.log('Tir!')
 
         let closestEnemy = null
         let closestDistance = this.shootRange
@@ -189,7 +188,6 @@ export class CharacterController {
 
         if (closestEnemy) {
             this.createBullet(closestEnemy)
-            console.log(`Tir vers ennemi! Distance: ${closestDistance.toFixed(1)}m`)
         }
     }
 

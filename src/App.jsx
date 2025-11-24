@@ -8,6 +8,7 @@ import { Speedometer } from './components/Speedometer';
 import { InteractionPrompt } from './components/InteractionPrompt';
 import { DialogueUI } from './components/DialogueUI';
 import { GameOverScreen } from './components/GameOverScreen';
+import { HealthBar } from './components/HealthBar';
 import { useScene } from './context/SceneContext';
 
 function AppContent() {
@@ -102,6 +103,7 @@ function AppContent() {
         />
       )}
       <LoadingScreen isLoading={isLoading} />
+      <HealthBar />
       <Speedometer />
       <InteractionPrompt />
       <DialogueUI />
