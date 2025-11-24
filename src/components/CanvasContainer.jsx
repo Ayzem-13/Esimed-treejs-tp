@@ -8,9 +8,11 @@ export function CanvasContainer() {
   const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused, shouldReset, setShouldReset, setIsGameOver } = useScene();
 
   useEffect(() => {
-    if (shouldReset && appRef.current) {
-      appRef.current.dispose();
-      appRef.current = null;
+    if (shouldReset) {
+      if (appRef.current) {
+        appRef.current.dispose();
+        appRef.current = null;
+      }
       setAppInstance(null);
       setShouldReset(false);
     }

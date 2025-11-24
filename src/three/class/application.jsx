@@ -13,6 +13,7 @@ export class Application {
         this.container = container
         this.gameMode = gameMode
         this.onGameOver = onGameOver
+        this.isDisposed = false
         this.initParams();
         this.renderer = new THREE.WebGPURenderer({ antialias: true })
         this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -250,7 +251,6 @@ export class Application {
             spawnPosition
         )
 
-        // Callback quand le joueur meurt
         this.character.onDeath = () => {
             if (this.onGameOver) {
                 this.onGameOver()
@@ -390,6 +390,8 @@ export class Application {
     }
 
     render() {
+        if (this.isDisposed) return
+
         const deltaTime = this.clock.getDelta()
         if (this.character) {
             this.character.update(deltaTime)
@@ -397,11 +399,9 @@ export class Application {
         if (this.vehicle) {
             this.vehicle.update(deltaTime)
         }
-        // Mettre à jour les animations des NPCs
         for (const npc of this.npcs) {
             npc.update(deltaTime)
         }
-        // Mettre à jour les ennemis
         for (const enemy of this.enemies) {
             enemy.update(deltaTime)
         }
@@ -411,8 +411,10 @@ export class Application {
     }
 
     dispose() {
+        if (this.isDisposed) return
+        this.isDisposed = true
+
         this.renderer.setAnimationLoop(null)
-        this.renderer.dispose()
 
         if (this.character) {
             this.character.dispose()
@@ -422,13 +424,11 @@ export class Application {
             this.vehicle.dispose()
         }
 
-        // Nettoyer les NPCs
         for (const npc of this.npcs) {
             npc.dispose()
         }
         this.npcs = []
 
-        // Nettoyer les ennemis
         for (const enemy of this.enemies) {
             enemy.dispose()
         }
@@ -454,6 +454,11 @@ export class Application {
 
         if (this.importInput && this.importInput.parentNode) {
             this.importInput.parentNode.removeChild(this.importInput)
+        }
+
+        // Dispose le renderer 
+        if (this.renderer) {
+            this.renderer.dispose()
         }
     }
 

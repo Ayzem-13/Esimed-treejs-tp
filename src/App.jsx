@@ -86,6 +86,12 @@ function AppContent() {
     }
   }, [isPaused, appInstance]);
 
+  useEffect(() => {
+    if (shouldReset) {
+      setShowStartMenu(true);
+    }
+  }, [shouldReset]);
+
   return (
     <main className="relative w-full h-screen">
       <CanvasContainer />

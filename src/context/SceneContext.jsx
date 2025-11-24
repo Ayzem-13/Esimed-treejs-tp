@@ -19,15 +19,11 @@ export const SceneProvider = ({ children }) => {
         }
         document.body.style.cursor = 'auto';
 
-        if (appInstance) {
-            appInstance.dispose();
-        }
-
+        setIsGameOver(false);
+        setIsPaused(false);
         setGameMode(null);
         setMenuClosed(false);
         setShouldReset(true);
-        setIsPaused(false);
-        setIsGameOver(false);
     };
 
     return (
