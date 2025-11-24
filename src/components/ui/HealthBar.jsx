@@ -39,7 +39,7 @@ export function HealthBar() {
     };
 
     return (
-        <div className="fixed bottom-6 left-6 z-50" key={forceUpdate}>
+        <div className="fixed bottom-4 left-6 z-50" key={forceUpdate}>
             <div 
                 className="px-4 py-3 rounded-lg flex items-center gap-3"
                 style={{
