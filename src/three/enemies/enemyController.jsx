@@ -35,6 +35,8 @@ export class EnemyController {
         this.isDead = false
         this.health = options.health || 1
         this.maxHealth = this.health
+        this.damage = options.damage || 20 
+        this.attackRange = options.attackRange || 1.5 
 
         this.createCubeEnemy()
     }
@@ -45,9 +47,10 @@ export class EnemyController {
         this.body.rotation.y = this.rotation
         this.scene.add(this.body)
         const geometry = new THREE.BoxGeometry(0.5, 1.8, 0.5)
-        const material = new THREE.MeshPhongMaterial({
-            color: 0x4CAF50, 
-            shininess: 0
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x4CAF50,
+            roughness: 0.8,
+            metalness: 0.1
         })
         this.mesh = new THREE.Mesh(geometry, material)
         this.mesh.castShadow = true
@@ -108,6 +111,11 @@ export class EnemyController {
             this.position.copy(nextPosition)
         } else {
             this.isMoving = false
+        }
+
+        // Attaquer le joueur si assez proche (et pas dans le véhicule)
+        if (distanceToTarget <= this.attackRange && !this.targetCharacter.inVehicle) {
+            this.targetCharacter.takeDamage(this.damage)
         }
 
         if (this.mixer) {
@@ -180,15 +188,22 @@ export class EnemyController {
 
 
     dispose() {
-        if (this.body && this.body.parent) {
-            this.body.parent.remove(this.body)
+        this.isLoaded = false
+
+        if (this.mixer) {
+            this.mixer.stopAllAction()
+            this.mixer = null
         }
+
         if (this.mesh) {
             if (this.mesh.geometry) this.mesh.geometry.dispose()
             if (this.mesh.material) this.mesh.material.dispose()
+            this.mesh = null
         }
-        if (this.mixer) {
-            this.mixer.stopAllAction()
+
+        if (this.body && this.body.parent) {
+            this.body.parent.remove(this.body)
+            this.body = null
         }
     }
 }

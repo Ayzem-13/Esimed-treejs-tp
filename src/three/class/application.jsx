@@ -9,9 +9,10 @@ import { EnemyController } from '../enemies/enemyController'
 
 export class Application {
 
-    constructor(container = document.body, gameMode = 'editor') {
+    constructor(container = document.body, gameMode = 'editor', onGameOver = null) {
         this.container = container
         this.gameMode = gameMode
+        this.onGameOver = onGameOver
         this.initParams();
         this.renderer = new THREE.WebGPURenderer({ antialias: true })
         this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -248,6 +249,13 @@ export class Application {
             this.camera.camera,
             spawnPosition
         )
+
+        // Callback quand le joueur meurt
+        this.character.onDeath = () => {
+            if (this.onGameOver) {
+                this.onGameOver()
+            }
+        }
 
         // Passer les NPCs au personnage pour les collisions
         this.character.setNPCs(this.npcs)

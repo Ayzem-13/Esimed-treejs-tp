@@ -100,7 +100,7 @@ export function GameOverScreen() {
                                     filter: 'drop-shadow(0 10px 20px rgba(239, 68, 68, 0.3))'
                                 }}
                             >
-                                GAME OVER
+                                VOUS ETES MORT
                             </h1>
 
                             {/* Decorative line */}
@@ -113,19 +113,10 @@ export function GameOverScreen() {
 
                         {/* Message section */}
                         <div className="space-y-4 max-w-xl mx-auto">
-                            <p className="text-4xl md:text-5xl font-bold text-red-300/90">Trop d'erreurs!</p>
+                            <p className="text-4xl md:text-5xl font-bold text-red-300/90">Les zombies vous ont eu!</p>
                             <p className="text-base md:text-lg text-gray-300/80 leading-relaxed">
-                                Tu as commis trop de fautes. Réessaye et fais attention à tes réponses pour gagner!
+                                Vous avez été dévoré par les zombies. Réessayez et survivez plus longtemps!
                             </p>
-                        </div>
-
-                        {/* Stats card */}
-                        <div className="relative group">
-                            <div className="absolute inset-0 bg-linear-to-r from-red-600/20 to-orange-600/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                            <div className="relative bg-black/30 backdrop-blur-xl rounded-2xl border border-red-500/30 px-8 py-6 space-y-2">
-                                <p className="text-sm text-gray-400 uppercase tracking-wider font-medium">Limite de fautes</p>
-                                <p className="text-4xl font-black text-red-400">3 erreurs</p>
-                            </div>
                         </div>
 
                         {/* CTA Button */}

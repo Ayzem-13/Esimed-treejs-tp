@@ -5,7 +5,7 @@ import { useScene } from '../context/SceneContext';
 export function CanvasContainer() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
-  const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused, shouldReset, setShouldReset } = useScene();
+  const { setAppInstance, menuClosed, setIsLoading, gameMode, isPaused, shouldReset, setShouldReset, setIsGameOver } = useScene();
 
   useEffect(() => {
     if (shouldReset && appRef.current) {
@@ -20,7 +20,9 @@ export function CanvasContainer() {
     if (menuClosed && containerRef.current && !appRef.current && gameMode) {
       setIsLoading(true);
 
-      appRef.current = new Application(containerRef.current, gameMode);
+      appRef.current = new Application(containerRef.current, gameMode, () => {
+        setIsGameOver(true);
+      });
       setAppInstance(appRef.current);
 
       const timer = setTimeout(() => {
@@ -29,7 +31,7 @@ export function CanvasContainer() {
 
       return () => clearTimeout(timer);
     }
-  }, [menuClosed, gameMode, setAppInstance, setIsLoading]);
+  }, [menuClosed, gameMode, setAppInstance, setIsLoading, setIsGameOver]);
 
   useEffect(() => {
     if (appRef.current) {

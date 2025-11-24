@@ -36,6 +36,13 @@ export class CharacterController {
         this.bodyRotation = 0
         this.rotationSpeed = 0.08
 
+        // Vie du personnage
+        this.health = 100
+        this.maxHealth = 100
+        this.isDead = false
+        this.damageCooldown = 0 
+        this.onDeath = null
+
         // Animation
         this.mixer = null
         this.animations = []
@@ -217,6 +224,19 @@ export class CharacterController {
                 this.ignoreVehicleTimer = 0
                 this.ignoreVehicleCollision = false
             }
+        }
+
+        // Décrémenter le cooldown des dégâts
+        if (this.damageCooldown > 0) {
+            this.damageCooldown -= deltaTime
+        }
+
+        // Ne plus bouger si mort (mais continuer l'animation de mort)
+        if (this.isDead) {
+            if (this.mixer) {
+                this.mixer.update(deltaTime)
+            }
+            return
         }
 
         let moveForward = 0
@@ -436,6 +456,38 @@ export class CharacterController {
 
         this.nearbyNPC = npc
         this.currentDialogue = this.dialogueManager.getRandomQuestion()
+    }
+
+    takeDamage(amount) {
+        if (this.isDead || this.damageCooldown > 0 || this.inVehicle) return
+
+        this.health -= amount
+        this.damageCooldown = 1 
+        console.log(`Degats recu Vie: ${this.health}/${this.maxHealth}`)
+
+        if (this.health <= 0) {
+            this.health = 0
+            this.isDead = true
+            console.log('Le joueur est mort')
+
+            if (this.mixer && this.animations[0]) {
+                if (this.currentAction) {
+                    this.currentAction.stop()
+                }
+                const deathAction = this.mixer.clipAction(this.animations[0])
+                deathAction.setLoop(THREE.LoopOnce)
+                deathAction.clampWhenFinished = true
+                deathAction.play()
+            }
+
+            if (this.onDeath) {
+                this.onDeath()
+            }
+        }
+    }
+
+    getHealth() {
+        return this.health
     }
 
     dispose() {
