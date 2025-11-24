@@ -6,6 +6,7 @@ import { CharacterController } from '../characters/characterController'
 import { VehicleController } from '../vehicles/vehicleController'
 import { NPCController } from '../npc/npcController'
 import { EnemyController } from '../enemies/enemyController'
+import { WaveManager } from '../enemies/waveManager'
 
 export class Application {
 
@@ -59,15 +60,12 @@ export class Application {
         this.character = null
         this.npcs = []
         this.enemies = []
+        this.waveManager = null
         if (this.gameMode === 'character') {
             this.initCharacter()
             this.initNPCs(this.character.collisionManager)
-            this.initEnemies(this.character.collisionManager)
-            // le véhicule aux ennemis pour qu'ils le suivent
-            for (const enemy of this.enemies) {
-                enemy.setTargetVehicle(this.vehicle)
-            }
-            this.character.setEnemies(this.enemies)
+            this.initWaveManager()
+            this.waveManager.startWave()
         }
 
         this.selectedObject = null
@@ -221,26 +219,13 @@ export class Application {
 
     }
 
-    initEnemies(collisionManager) {
-        // Créer 4 zombies simples
-        const positions = [
-            new THREE.Vector3(15, 0, 15),
-            new THREE.Vector3(-15, 0, 15),
-            new THREE.Vector3(15, 0, -15),
-            new THREE.Vector3(-15, 0, -15)
-        ]
-
-        positions.forEach((pos, idx) => {
-            const zombie = new EnemyController(
-                this.scene.scene,
-                pos,
-                { scale: 1, health: 75 },
-                collisionManager
-            )
-            zombie.setTargetCharacter(this.character)
-            this.enemies.push(zombie)
-            console.log(`Zombie ${idx + 1} créé`)
-        })
+    initWaveManager() {
+        this.waveManager = new WaveManager(
+            this.scene.scene,
+            this.character,
+            this.character.collisionManager
+        )
+        this.character.setEnemies(this.waveManager.enemies)
     }
 
 
@@ -403,8 +388,13 @@ export class Application {
         for (const npc of this.npcs) {
             npc.update(deltaTime)
         }
-        for (const enemy of this.enemies) {
-            enemy.update(deltaTime)
+        if (this.waveManager) {
+            this.waveManager.update(deltaTime)
+
+            // Démarrer la prochaine vague si la vague actuelle est terminée
+            if (!this.waveManager.waveInProgress && this.waveManager.currentWave > 0) {
+                this.waveManager.startWave()
+            }
         }
         this.camera.process(this.globalParams)
         this.sunHelper.update()
@@ -430,10 +420,9 @@ export class Application {
         }
         this.npcs = []
 
-        for (const enemy of this.enemies) {
-            enemy.dispose()
+        if (this.waveManager) {
+            this.waveManager.dispose()
         }
-        this.enemies = []
 
         if (this.camera) {
             this.camera.dispose()
