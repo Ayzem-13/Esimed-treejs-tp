@@ -40,8 +40,16 @@ export class CharacterController {
         this.health = 100
         this.maxHealth = 100
         this.isDead = false
-        this.damageCooldown = 0 
+        this.damageCooldown = 0
         this.onDeath = null
+
+        this.shootCooldown = 0
+        this.shootRate = 0.3
+        this.shootDamage = 50
+        this.shootRange = 30
+        this.enemies = []
+        this.bullets = []
+        this.bulletSpeed = 25
 
         // Animation
         this.mixer = null
@@ -91,6 +99,10 @@ export class CharacterController {
         this.npcs = npcs
     }
 
+    setEnemies(enemies) {
+        this.enemies = enemies
+    }
+
     createCharacterMesh() {
         const loader = new GLTFLoader()
 
@@ -134,6 +146,111 @@ export class CharacterController {
     setupEventListeners() {
         window.addEventListener('keydown', (e) => this.handleKeyDown(e))
         window.addEventListener('keyup', (e) => this.handleKeyUp(e))
+        window.addEventListener('mousedown', (e) => this.handleMouseDown(e))
+    }
+
+    handleMouseDown(event) {
+        if (event.button === 0 && !this.isDead && !this.inVehicle) {
+            this.shoot()
+        }
+    }
+
+    shoot() {
+        if (this.shootCooldown > 0) return
+
+        this.shootCooldown = this.shootRate
+        // console.log('Tir!')
+
+        let closestEnemy = null
+        let closestDistance = this.shootRange
+
+        for (const enemy of this.enemies) {
+            if (!enemy.isLoaded || enemy.isDead) continue
+
+            const enemyPos = enemy.body.position
+            const playerPos = this.body.position
+            const distance = playerPos.distanceTo(enemyPos)
+
+            if (distance < closestDistance) {
+                const dirToEnemy = new THREE.Vector3().subVectors(enemyPos, playerPos).normalize()
+                const playerDir = new THREE.Vector3(
+                    Math.sin(this.bodyRotation),
+                    0,
+                    Math.cos(this.bodyRotation)
+                )
+
+                const dot = dirToEnemy.dot(playerDir)
+                if (dot > 0.5) {
+                    closestDistance = distance
+                    closestEnemy = enemy
+                }
+            }
+        }
+
+        if (closestEnemy) {
+            this.createBullet(closestEnemy)
+            console.log(`Tir vers ennemi! Distance: ${closestDistance.toFixed(1)}m`)
+        }
+    }
+
+    createBullet(targetEnemy) {
+        const bulletGeometry = new THREE.SphereGeometry(0.15, 8, 8)
+        const bulletMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffff00,
+            emissive: 0xffaa00,
+            emissiveIntensity: 0.5
+        })
+        const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial)
+
+        const startPos = this.body.position.clone()
+        startPos.y += 0.8
+        const forward = new THREE.Vector3(
+            Math.sin(this.bodyRotation),
+            0,
+            Math.cos(this.bodyRotation)
+        )
+        startPos.add(forward.multiplyScalar(0.5))
+
+        bulletMesh.position.copy(startPos)
+        this.scene.add(bulletMesh)
+
+        this.bullets.push({
+            mesh: bulletMesh,
+            target: targetEnemy,
+            damage: this.shootDamage
+        })
+    }
+
+    updateBullets(deltaTime) {
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const bullet = this.bullets[i]
+
+            // Si l'ennemi est mort ou n'existe plus, supprimer la balle
+            if (!bullet.target || bullet.target.isDead || !bullet.target.body) {
+                this.scene.remove(bullet.mesh)
+                bullet.mesh.geometry.dispose()
+                bullet.mesh.material.dispose()
+                this.bullets.splice(i, 1)
+                continue
+            }
+
+            // Direction vers l'ennemi
+            const targetPos = bullet.target.body.position.clone()
+            targetPos.y += 0.9
+            const direction = new THREE.Vector3().subVectors(targetPos, bullet.mesh.position).normalize()
+
+            bullet.mesh.position.add(direction.multiplyScalar(this.bulletSpeed * deltaTime))
+
+            // Vérifier si la balle a touché l'ennemi
+            const distanceToTarget = bullet.mesh.position.distanceTo(targetPos)
+            if (distanceToTarget < 0.5) {
+                bullet.target.takeDamage(bullet.damage)
+                this.scene.remove(bullet.mesh)
+                bullet.mesh.geometry.dispose()
+                bullet.mesh.material.dispose()
+                this.bullets.splice(i, 1)
+            }
+        }
     }
 
     handleKeyDown(event) {
@@ -230,6 +347,14 @@ export class CharacterController {
         if (this.damageCooldown > 0) {
             this.damageCooldown -= deltaTime
         }
+
+        // Décrémenter le cooldown du tir
+        if (this.shootCooldown > 0) {
+            this.shootCooldown -= deltaTime
+        }
+
+        // Mettre à jour les balles
+        this.updateBullets(deltaTime)
 
         // Ne plus bouger si mort (mais continuer l'animation de mort)
         if (this.isDead) {
@@ -462,7 +587,7 @@ export class CharacterController {
         if (this.isDead || this.damageCooldown > 0 || this.inVehicle) return
 
         this.health -= amount
-        this.damageCooldown = 1 
+        this.damageCooldown = 1
         console.log(`Degats recu Vie: ${this.health}/${this.maxHealth}`)
 
         if (this.health <= 0) {
@@ -491,6 +616,14 @@ export class CharacterController {
     }
 
     dispose() {
+        // Nettoyer les balles
+        for (const bullet of this.bullets) {
+            this.scene.remove(bullet.mesh)
+            bullet.mesh.geometry.dispose()
+            bullet.mesh.material.dispose()
+        }
+        this.bullets = []
+
         if (this.body && this.body.parent) {
             this.body.parent.remove(this.body)
         }

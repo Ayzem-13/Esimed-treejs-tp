@@ -186,6 +186,37 @@ export class EnemyController {
         return this.body.position.distanceTo(this.targetCharacter.body.position)
     }
 
+    takeDamage(amount) {
+        if (this.isDead) return
+
+        this.health -= amount
+        console.log(`Zombie touché! Vie: ${this.health}/${this.maxHealth}`)
+
+        // Changer la couleur pour montrer les dégâts
+        if (this.mesh && this.mesh.material) {
+            this.mesh.material.color.setHex(0xff0000) 
+            setTimeout(() => {
+                if (this.mesh && this.mesh.material && !this.isDead) {
+                    this.mesh.material.color.setHex(0x4CAF50) 
+                }
+            }, 100)
+        }
+
+        if (this.health <= 0) {
+            this.die()
+        }
+    }
+
+    die() {
+        this.isDead = true
+        this.isLoaded = false
+        console.log('Zombie éliminé!')
+
+        // Supprimer le zombie de la scène
+        if (this.body && this.body.parent) {
+            this.body.parent.remove(this.body)
+        }
+    }
 
     dispose() {
         this.isLoaded = false

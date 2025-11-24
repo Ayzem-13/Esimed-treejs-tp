@@ -63,10 +63,11 @@ export class Application {
             this.initCharacter()
             this.initNPCs(this.character.collisionManager)
             this.initEnemies(this.character.collisionManager)
-            // Passer le véhicule aux ennemis pour qu'ils le suivent
+            // le véhicule aux ennemis pour qu'ils le suivent
             for (const enemy of this.enemies) {
                 enemy.setTargetVehicle(this.vehicle)
             }
+            this.character.setEnemies(this.enemies)
         }
 
         this.selectedObject = null
@@ -159,7 +160,7 @@ export class Application {
                 const hitPoint = intersects[0].point
                 const offset = new THREE.Vector3(
                     hitPoint.x - this.dragStartPosition.x,
-                    0, // Ne pas changer Y pour éviter de tomber dans le sol
+                    0, 
                     hitPoint.z - this.dragStartPosition.z
                 )
 
@@ -233,7 +234,7 @@ export class Application {
             const zombie = new EnemyController(
                 this.scene.scene,
                 pos,
-                { scale: 1 },
+                { scale: 1, health: 75 },
                 collisionManager
             )
             zombie.setTargetCharacter(this.character)
