@@ -40,6 +40,10 @@ export class PlayerCombat {
         return this.score
     }
 
+    resetScore() {
+        this.score = 0
+    }
+
     shoot(playerPosition, playerRotation) {
         if (this.shootCooldown > 0) return
 

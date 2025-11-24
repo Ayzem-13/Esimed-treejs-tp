@@ -1,5 +1,4 @@
 import * as THREE from 'three/webgpu'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 export class EnemyController {
     constructor(scene, position = new THREE.Vector3(0, 0, 0), options = {}, collisionManager = null) {

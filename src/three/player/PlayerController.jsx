@@ -39,6 +39,7 @@ export class PlayerController {
         this.vehicleDistance = 3
         this.ignoreVehicleCollision = false
         this.ignoreVehicleTimer = 0
+        this.vehiclePurchased = false
 
         // NPCs et ennemis
         this.npcs = []
@@ -83,11 +84,7 @@ export class PlayerController {
         }
 
         this.input.onVehicleToggle = () => {
-            if (this.inVehicle) {
-                this.exitVehicle()
-            } else if (this.vehicle && this.getDistanceToVehicle() <= this.vehicleDistance) {
-                this.enterVehicle()
-            }
+            this.onVehicleToggle()
         }
 
         this.input.onInteract = () => {
@@ -158,11 +155,16 @@ export class PlayerController {
     enterVehicle() {
         if (!this.vehicle || this.inVehicle) return
 
-        if (this.combat.score < 1000) {
-            console.log(`Score insuffisant: ${this.combat.score}/1000. Vehicule verrouille`)
-            return
+        // Si le véhicule n'est pas encore acheté
+        if (!this.vehiclePurchased) {
+            if (this.combat.score < 1000) {
+                console.log(`Score insuffisant: ${this.combat.score}/1000. Vehicule verrouille`)
+                return
+            }
+            this.combat.score -= 1000
+            this.vehiclePurchased = true
+            console.log('🚗 Véhicule acheté! Vous pouvez l\'utiliser à l\'infini!')
         }
-        this.combat.score -= 1000
 
         this.inVehicle = true
         this.body.visible = false
@@ -249,21 +251,49 @@ export class PlayerController {
     getNearbyInteractable() {
         const interactionDistance = 3
         const nearbyNPC = this.getNearbyNPC()
+        const vehicleDistance = this.getDistanceToVehicle()
 
+        // Récupérer les distances des deux
+        let npcDistance = Infinity
         if (nearbyNPC) {
-            const distance = this.body.position.distanceTo(nearbyNPC.body.position)
-            if (distance < interactionDistance) {
-                return {
-                    object: nearbyNPC.body,
-                    label: 'Discuter',
-                    key: 'E',
-                    callback: () => this.startDialogue(nearbyNPC),
-                    distance
-                }
+            npcDistance = this.body.position.distanceTo(nearbyNPC.body.position)
+        }
+
+        // Retourner le plus proche (ou celui disponible)
+        const npcNearby = nearbyNPC && npcDistance < interactionDistance
+        const vehicleNearby = this.vehicle && vehicleDistance < interactionDistance
+
+        // Véhicule est plus proche
+        if (vehicleNearby && (!npcNearby || vehicleDistance < npcDistance)) {
+            return {
+                object: this.vehicle.mesh,
+                label: this.vehiclePurchased ? 'Entrer' : 'Acheter (1000 pts)',
+                key: 'F',
+                callback: () => this.onVehicleToggle?.(),
+                distance: vehicleDistance
+            }
+        }
+
+        // NPC est plus proche
+        if (npcNearby) {
+            return {
+                object: nearbyNPC.body,
+                label: 'Discuter',
+                key: 'E',
+                callback: () => this.startDialogue(nearbyNPC),
+                distance: npcDistance
             }
         }
 
         return null
+    }
+
+    onVehicleToggle() {
+        if (this.inVehicle) {
+            this.exitVehicle()
+        } else if (this.vehicle && this.getDistanceToVehicle() <= this.vehicleDistance) {
+            this.enterVehicle()
+        }
     }
 
     startDialogue(npc, isAutoQuiz = false) {
@@ -338,6 +368,13 @@ export class PlayerController {
         if (this.cameraController) {
             this.cameraController.update()
         }
+    }
+
+    resetGame() {
+        this.vehiclePurchased = false
+        this.combat.resetScore()
+        this.healthSystem.reset()
+        this.dialogueManager.resetAll()
     }
 
     dispose() {
