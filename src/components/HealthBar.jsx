@@ -5,21 +5,28 @@ export function HealthBar() {
     const { appInstance, gameMode } = useScene();
     const [health, setHealth] = useState(100);
     const [maxHealth, setMaxHealth] = useState(100);
+    const [forceUpdate, setForceUpdate] = useState(0);
 
     useEffect(() => {
-        if (!appInstance || !appInstance.character || gameMode !== 'character') return;
+        if (!appInstance?.character || gameMode !== 'character') return;
 
-        const interval = setInterval(() => {
-            if (appInstance.character) {
-                setHealth(appInstance.character.health);
-                setMaxHealth(appInstance.character.maxHealth);
+        const checkHealth = () => {
+            if (appInstance?.character) {
+                const currentHealth = appInstance.character.health;
+                const currentMaxHealth = appInstance.character.maxHealth;
+                if (currentHealth !== health || currentMaxHealth !== maxHealth) {
+                    setHealth(currentHealth);
+                    setMaxHealth(currentMaxHealth);
+                    setForceUpdate(prev => prev + 1);
+                }
             }
-        }, 100);
+        };
 
-        return () => clearInterval(interval);
-    }, [appInstance, gameMode]);
+        const intervalId = setInterval(checkHealth, 100);
+        return () => clearInterval(intervalId);
+    }, [appInstance, gameMode, health, maxHealth]);
 
-    if (gameMode !== 'character' || !appInstance?.character) return null;
+    if (!appInstance || !appInstance.character || gameMode !== 'character') return null;
 
     const healthPercent = (health / maxHealth) * 100;
 
@@ -30,7 +37,7 @@ export function HealthBar() {
     };
 
     return (
-        <div className="fixed bottom-6 left-6 z-50">
+        <div className="fixed bottom-6 left-6 z-50" key={forceUpdate}>
             <div className="flex items-center gap-3">
                 <div className="text-white text-sm font-bold drop-shadow-lg">VIE</div>
                 <div className="w-48 h-4 bg-gray-800/80 rounded-full overflow-hidden border border-gray-600">

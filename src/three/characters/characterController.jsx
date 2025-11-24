@@ -625,10 +625,18 @@ export class CharacterController {
         this.damageCooldown = 1
         console.log(`Degats recu Vie: ${this.health}/${this.maxHealth}`)
 
+        if (this.onHealthChange) {
+            this.onHealthChange(this.health, this.maxHealth)
+        }
+
         if (this.health <= 0) {
             this.health = 0
             this.isDead = true
             console.log('Le joueur est mort')
+
+            if (this.onHealthChange) {
+                this.onHealthChange(this.health, this.maxHealth)
+            }
 
             if (this.mixer && this.animations[0]) {
                 if (this.currentAction) {
