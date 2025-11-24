@@ -1,61 +1,61 @@
 {
   "questions": [
     {
-      "question": "Super Mario Bros a été lancé sur NES en 1985?",
+      "question": "La première Game Boy sortie en 1989 avait un écran couleur ?",
       "answerA": "Vrai",
-      "answerB": "Faux",
-      "correctAnswer": "A"
-    },
-    {
-      "question": "Tetris a été créé en Amérique?",
-      "answerA": "Vrai",
-      "answerB": "Faux (créé en Russie)",
+      "answerB": "Faux (écran monochrome vert)",
       "correctAnswer": "B"
     },
     {
-      "question": "The Legend of Zelda: Ocarina of Time est sorti sur Nintendo 64?",
+      "question": "Fortnite a été développé par le studio Epic Games ?",
       "answerA": "Vrai",
       "answerB": "Faux",
       "correctAnswer": "A"
     },
     {
-      "question": "Pac-Man s'appelait 'Puck-Man' à l'origine?",
+      "question": "La PlayStation 1 devait être à l'origine un accessoire pour Nintendo ?",
       "answerA": "Vrai",
       "answerB": "Faux",
       "correctAnswer": "A"
     },
     {
-      "question": "Sonic est la mascotte officielle de Nintendo?",
+      "question": "Elden Ring a remporté le titre de Jeu de l'Année (GOTY) en 2022 ?",
       "answerA": "Vrai",
-      "answerB": "Faux (c'est Sega)",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Dans le jeu original Space Invaders (1978), les ennemis accélèrent à cause d'un bug ?",
+      "answerA": "Vrai",
+      "answerB": "Faux",
+      "correctAnswer": "A"
+    },
+    {
+      "question": "Overwatch 2 se joue avec des équipes de 6 joueurs ?",
+      "answerA": "Vrai",
+      "answerB": "Faux (5 joueurs)",
       "correctAnswer": "B"
     },
     {
-      "question": "Final Fantasy VI a été publié sur SNES?",
+      "question": "La Dreamcast fut la dernière console fabriquée par Sega ?",
       "answerA": "Vrai",
       "answerB": "Faux",
       "correctAnswer": "A"
     },
     {
-      "question": "Minecraft a été publié pour la première fois en 2009?",
+      "question": "Cyberpunk 2077 a été développé par Ubisoft ?",
       "answerA": "Vrai",
-      "answerB": "Faux (2011)",
-      "correctAnswer": "A"
-    },
-    {
-      "question": "Half-Life 3 a été officiellement annoncé?",
-      "answerA": "Vrai",
-      "answerB": "Faux",
+      "answerB": "Faux (CD Projekt Red)",
       "correctAnswer": "B"
     },
     {
-      "question": "The Elder Scrolls V: Skyrim est sorti en 2011?",
+      "question": "Dans le tout premier Doom (1993), il était impossible de regarder en haut ou en bas ?",
       "answerA": "Vrai",
       "answerB": "Faux",
       "correctAnswer": "A"
     },
     {
-      "question": "Pokémon Red & Blue sont sortis en 1996 au Japon?",
+      "question": "Baldur's Gate 3 est basé sur les règles de Donjons & Dragons ?",
       "answerA": "Vrai",
       "answerB": "Faux",
       "correctAnswer": "A"

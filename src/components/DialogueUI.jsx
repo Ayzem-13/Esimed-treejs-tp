@@ -12,6 +12,8 @@ export function DialogueUI() {
     const [feedback, setFeedback] = useState('');
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [dialogueShown, setDialogueShown] = useState(false);
+    const [progressCorrect, setProgressCorrect] = useState(0);
+    const [progressTotal, setProgressTotal] = useState(10);
 
     useEffect(() => {
         if (gameMode !== 'character') {
@@ -68,6 +70,21 @@ export function DialogueUI() {
         };
     }, [appInstance, dialogueShown, setIsVictory]);
 
+    useEffect(() => {
+        if (!appInstance?.character?.dialogueManager) return;
+
+        const updateProgress = () => {
+            const progress = appInstance.character.dialogueManager.getProgress();
+            if (progress) {
+                setProgressCorrect(progress.correct);
+                setProgressTotal(progress.total);
+            }
+        };
+
+        const intervalId = setInterval(updateProgress, 100);
+        return () => clearInterval(intervalId);
+    }, [appInstance]);
+
     const handleAnswer = (answer) => {
         setSelectedAnswer(answer);
         const isCorrect = answer === correctAnswer;
@@ -101,65 +118,53 @@ export function DialogueUI() {
             return;
         }
 
-        // Charger la question suivante après un délai (SEULEMENT si la réponse était correcte)
-        if (isCorrect) {
-            setTimeout(() => {
-                const nextQuestion = appInstance?.character?.dialogueManager?.getRandomQuestion();
-                if (nextQuestion) {
-                    // Vérifier si c'est une victoire
-                    if (nextQuestion.victory) {
+        // Charger la question suivante après un délai
+        setTimeout(() => {
+            const nextQuestion = appInstance?.character?.dialogueManager?.getRandomQuestion();
+            if (nextQuestion) {
+                // Vérifier si c'est une victoire
+                if (nextQuestion.victory) {
+                    console.log('🎉 VICTOIRE détectée! Affichage du victory screen');
+                    appInstance.character.currentDialogue = null;
+                    appInstance.character.resumeWaves();
+                    if (appInstance?.character?.dialogueManager) {
+                        appInstance.character.dialogueManager.resetAll();
+                    }
+                    appInstance.character.wrongAnswerCount = 0;
+                    setIsVisible(false);
+                    setIsVictory(true);
+                } else {
+                    appInstance.character.currentDialogue = nextQuestion;
+                    setDialogueShown(false);
+                }
+            } else {
+                // Plus de questions disponibles cette session, fermer le dialogue
+                setFeedback('Session terminee!');
+                setTimeout(() => {
+                    if (appInstance?.character?.currentDialogue) {
                         appInstance.character.currentDialogue = null;
                         appInstance.character.resumeWaves();
-                        if (appInstance?.character?.dialogueManager) {
-                            appInstance.character.dialogueManager.resetAll();
-                        }
-                        appInstance.character.wrongAnswerCount = 0;
-                        setIsVisible(false);
-                        setIsVictory(true);
-                    } else {
-                        appInstance.character.currentDialogue = nextQuestion;
-                        setDialogueShown(false);
                     }
-                } else {
-                    // Plus de questions disponibles cette session, fermer le dialogue
-                    setFeedback('Session terminee!');
-                    setTimeout(() => {
-                        if (appInstance?.character?.currentDialogue) {
-                            appInstance.character.currentDialogue = null;
-                            appInstance.character.resumeWaves();
-                        }
-                        if (appInstance?.character?.dialogueManager) {
-                            appInstance.character.dialogueManager.resetSession();
-                        }
-                        appInstance.character.wrongAnswerCount = 0;
-                        setIsVisible(false);
-                    }, 2000);
-                }
-            }, 1500);
-        } else {
-            // Si la réponse est incorrecte, réinitialiser pour permettre une nouvelle tentative
-            setTimeout(() => {
-                setSelectedAnswer(null);
-                setFeedback('');
-            }, 1500);
-        }
+                    if (appInstance?.character?.dialogueManager) {
+                        appInstance.character.dialogueManager.resetSession();
+                    }
+                    appInstance.character.wrongAnswerCount = 0;
+                    setIsVisible(false);
+                }, 2000);
+            }
+        }, 1500);
     };
 
     if (!isVisible) return null;
-
-    // Afficher la progression
-    const progress = appInstance?.character?.dialogueManager?.getProgress();
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
             <div className="mx-auto max-w-2xl p-4 pointer-events-auto mb-4">
                 <div className="bg-white rounded-lg shadow-lg p-5 border-l-4 border-blue-500">
                     {/* Progression */}
-                    {progress && (
-                        <div className="mb-3 text-sm text-gray-500">
-                            Questions reussies: {progress.correct}/{progress.total}
-                        </div>
-                    )}
+                    <div className="mb-3 text-sm text-gray-500">
+                        {progressCorrect}/{progressTotal}
+                    </div>
 
                     {/* Question */}
                     <div className="mb-4">

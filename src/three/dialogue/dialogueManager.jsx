@@ -24,18 +24,36 @@ export class DialogueManager {
             return null;
         }
 
-        if (this.correctlyAnswered.length >= this.questions.length) {
+        if (this.correctlyAnswered.length >= 8) {
             return { victory: true };
         }
 
-        // Trouver les questions disponibles (
+        // Trouver les questions disponibles 
         const availableIndices = this.questions
             .map((_, idx) => idx)
             .filter(idx => !this.correctlyAnswered.includes(idx) && !this.currentSessionAsked.includes(idx));
 
         // Si plus de questions disponibles cette session
         if (availableIndices.length === 0) {
-            return null;
+            this.resetSession();
+            // Recharger les questions disponibles après reset
+            const newAvailableIndices = this.questions
+                .map((_, idx) => idx)
+                .filter(idx => !this.correctlyAnswered.includes(idx));
+            
+            if (newAvailableIndices.length === 0) {
+                return { victory: true };
+            }
+            
+            const randomIndex = newAvailableIndices[Math.floor(Math.random() * newAvailableIndices.length)];
+            const question = this.questions[randomIndex];
+            this.currentSessionAsked.push(randomIndex);
+            
+            return {
+                ...question,
+                questionIndex: randomIndex,
+                answered: false
+            };
         }
 
         // Choisir une question aléatoire parmi les disponibles
