@@ -1,5 +1,5 @@
 # 🏙️ MicroVille - Projet Three.js
-Le tp est dans la branch TP et le projet est dans la branch dev 
+Le tp est dans la branch TP et le projet est dans la branch main
 
 
 Un jeu de survie en 3D développé avec **Three.js** et **React**, où vous devez survivre aux vagues de zombies dans une ville moderne.
