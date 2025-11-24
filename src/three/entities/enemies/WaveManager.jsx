@@ -90,7 +90,7 @@ export class WaveManager {
         const zombie = new EnemyController(
             this.scene,
             spawnPos,
-            { scale: 1, health: 75 },
+            { scale: 0.55, health: 75, meshYOffset: -0.5 },
             this.collisionManager
         )
         zombie.setTargetCharacter(this.character)

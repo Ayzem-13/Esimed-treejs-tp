@@ -1,4 +1,6 @@
 import * as THREE from 'three/webgpu'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { EnemyAnimation } from './EnemyAnimation'
 
 export class EnemyController {
     constructor(scene, position = new THREE.Vector3(0, 0, 0), options = {}, collisionManager = null) {
@@ -12,9 +14,7 @@ export class EnemyController {
         this.rotation = options.rotation || 0
         this.meshYOffset = options.meshYOffset || 0
 
-        this.mixer = null
-        this.animations = []
-        this.currentAction = null
+        this.animation = new EnemyAnimation()
         this.autoPlayAnimation = options.autoPlayAnimation ?? true
 
         this.collisionManager = collisionManager
@@ -34,17 +34,54 @@ export class EnemyController {
         this.isDead = false
         this.health = options.health || 1
         this.maxHealth = this.health
-        this.damage = options.damage || 20 
-        this.attackRange = options.attackRange || 1.5 
+        this.damage = options.damage || 20
+        this.attackRange = options.attackRange || 1.5
+        this.attackCooldown = 0
+        this.attackSpeed = 0.6 // Cooldown entre les attaques (en secondes) 
 
-        this.createCubeEnemy()
+        this.loadZombieModel()
     }
 
-    createCubeEnemy() {
+    loadZombieModel() {
         this.body = new THREE.Group()
         this.body.position.copy(this.position)
         this.body.rotation.y = this.rotation
         this.scene.add(this.body)
+
+        const loader = new GLTFLoader()
+        loader.load(
+            '/models/character/Zombie.glb',
+            (gltf) => {
+                this.mesh = gltf.scene
+                this.mesh.scale.set(this.scale, this.scale, this.scale)
+                this.mesh.position.y = this.meshYOffset
+
+                // Setup animations
+                this.animation.setup(this.mesh, gltf.animations)
+
+                this.mesh.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true
+                        child.receiveShadow = true
+                    }
+                })
+
+                this.body.add(this.mesh)
+                this.isLoaded = true
+
+                console.log(`Zombie chargé à la position: ${this.position.x}, ${this.position.y}, ${this.position.z}`)
+                console.log(`Animations disponibles: ${gltf.animations.length}`)
+            },
+            undefined,
+            (error) => {
+                console.error('Erreur de chargement du Zombie:', error)
+                // Fallback: créer un cube si le modèle ne charge pas
+                this.createFallbackCube()
+            }
+        )
+    }
+
+    createFallbackCube() {
         const geometry = new THREE.BoxGeometry(0.5, 1.8, 0.5)
         const material = new THREE.MeshStandardMaterial({
             color: 0x4CAF50,
@@ -59,7 +96,7 @@ export class EnemyController {
         this.body.add(this.mesh)
         this.isLoaded = true
 
-        console.log(`Zombie créé à la position: ${this.position.x}, ${this.position.y}, ${this.position.z}`)
+        console.log(`Fallback: Cube créé à la position: ${this.position.x}, ${this.position.y}, ${this.position.z}`)
     }
 
     setTargetCharacter(character) {
@@ -73,6 +110,11 @@ export class EnemyController {
     //Mettre à jour la position et le mouvement du zombie
     update(deltaTime = 1 / 60) {
         if (!this.isLoaded || !this.targetCharacter) return
+
+        // Gérer le cooldown d'attaque
+        if (this.attackCooldown > 0) {
+            this.attackCooldown -= deltaTime
+        }
 
         // Déterminer la cible: véhicule si le joueur est dedans, sinon le personnage
         let targetPos
@@ -92,7 +134,7 @@ export class EnemyController {
             this.isMoving = true
 
             const direction = new THREE.Vector3().subVectors(targetPos, currentPos)
-            direction.y = 0 
+            direction.y = 0
             direction.normalize()
 
             const targetRotation = Math.atan2(direction.x, direction.z)
@@ -112,14 +154,21 @@ export class EnemyController {
             this.isMoving = false
         }
 
-        // Attaquer le joueur si assez proche (et pas dans le véhicule)
-        if (distanceToTarget <= this.attackRange && !this.targetCharacter.inVehicle) {
-            this.targetCharacter.takeDamage(this.damage)
+        // Gérer les animations
+        if (this.isMoving) {
+            // Jouer animation de marche (index 11)
+            this.animation.playAnimation(11, true)
         }
 
-        if (this.mixer) {
-            this.mixer.update(deltaTime)
+        // Attaquer seulement si le cooldown est terminé
+        if (distanceToTarget <= this.attackRange && !this.targetCharacter.inVehicle) {
+            if (this.attackCooldown <= 0) {
+                this.targetCharacter.takeDamage(this.damage)
+                this.attackCooldown = this.attackSpeed
+            }
         }
+
+        this.animation.update(deltaTime)
 
         if (this.body) {
             this.position.copy(this.body.position)
@@ -138,18 +187,6 @@ export class EnemyController {
         while (diff < -Math.PI) diff += 2 * Math.PI
 
         return current + diff * speed
-    }
-
-    playAnimation(animationIndex, loop = true) {
-        if (!this.mixer || !this.animations[animationIndex]) return
-
-        if (this.currentAction) {
-            this.currentAction.stop()
-        }
-
-        this.currentAction = this.mixer.clipAction(this.animations[animationIndex])
-        this.currentAction.loop = loop ? THREE.LoopRepeat : THREE.LoopOnce
-        this.currentAction.play()
     }
 
     clearDebugBox() {
@@ -219,11 +256,9 @@ export class EnemyController {
 
     dispose() {
         this.isLoaded = false
+        this.attackCooldown = 0
 
-        if (this.mixer) {
-            this.mixer.stopAllAction()
-            this.mixer = null
-        }
+        this.animation.dispose()
 
         if (this.mesh) {
             if (this.mesh.geometry) this.mesh.geometry.dispose()
