@@ -23,6 +23,7 @@ export function DialogueUI() {
                     // Vérifier si c'est une victoire
                     if (dialogue.victory) {
                         appInstance.character.currentDialogue = null;
+                        appInstance.character.resumeWaves();
                         setIsVisible(false);
                         setIsVictory(true);
                         return;
@@ -38,6 +39,9 @@ export function DialogueUI() {
                     setFeedback('');
                     setSelectedAnswer(null);
                 } else if (!dialogue) {
+                    if (dialogueShown) {
+                        appInstance.character.resumeWaves();
+                    }
                     setIsVisible(false);
                     setDialogueShown(false);
                     setFeedback('');
@@ -72,6 +76,7 @@ export function DialogueUI() {
                 setTimeout(() => {
                     if (appInstance?.character?.currentDialogue) {
                         appInstance.character.currentDialogue = null;
+                        appInstance.character.resumeWaves();
                     }
                     if (appInstance?.character?.dialogueManager) {
                         appInstance.character.dialogueManager.resetSession();
@@ -92,6 +97,7 @@ export function DialogueUI() {
                     // Vérifier si c'est une victoire
                     if (nextQuestion.victory) {
                         appInstance.character.currentDialogue = null;
+                        appInstance.character.resumeWaves();
                         if (appInstance?.character?.dialogueManager) {
                             appInstance.character.dialogueManager.resetAll();
                         }
@@ -108,6 +114,7 @@ export function DialogueUI() {
                     setTimeout(() => {
                         if (appInstance?.character?.currentDialogue) {
                             appInstance.character.currentDialogue = null;
+                            appInstance.character.resumeWaves();
                         }
                         if (appInstance?.character?.dialogueManager) {
                             appInstance.character.dialogueManager.resetSession();

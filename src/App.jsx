@@ -10,6 +10,7 @@ import { DialogueUI } from './components/DialogueUI';
 import { GameOverScreen } from './components/GameOverScreen';
 import { VictoryScreen } from './components/VictoryScreen';
 import { HealthBar } from './components/HealthBar';
+import { ScoreHUD } from './components/ScoreHUD';
 import { useScene } from './context/SceneContext';
 
 function AppContent() {
@@ -106,6 +107,7 @@ function AppContent() {
       <LoadingScreen isLoading={isLoading} />
       <HealthBar />
       <Speedometer />
+      <ScoreHUD />
       <InteractionPrompt />
       <DialogueUI />
       <GameOverScreen />

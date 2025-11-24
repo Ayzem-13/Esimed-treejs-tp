@@ -51,6 +51,10 @@ export class CharacterController {
         this.bullets = []
         this.bulletSpeed = 25
 
+        // Score
+        this.score = 0
+        this.scorePerKill = 100
+
         // Animation
         this.mixer = null
         this.animations = []
@@ -101,6 +105,21 @@ export class CharacterController {
 
     setEnemies(enemies) {
         this.enemies = enemies
+    }
+
+    setWaveManager(waveManager) {
+        this.waveManager = waveManager
+    }
+
+    addScore(points) {
+        this.score += points
+        console.log(`+${points} points! Score total: ${this.score}`)
+    }
+
+    resumeWaves() {
+        if (this.waveManager && this.waveManager.resumeWaves) {
+            this.waveManager.resumeWaves()
+        }
     }
 
     createCharacterMesh() {
@@ -242,7 +261,14 @@ export class CharacterController {
             // Vérifier si la balle a touché l'ennemi
             const distanceToTarget = bullet.mesh.position.distanceTo(targetPos)
             if (distanceToTarget < 0.5) {
+                const wasAlive = !bullet.target.isDead
                 bullet.target.takeDamage(bullet.damage)
+                const isDead = bullet.target.isDead
+
+                if (wasAlive && isDead) {
+                    this.addScore(this.scorePerKill)
+                }
+
                 this.scene.remove(bullet.mesh)
                 bullet.mesh.geometry.dispose()
                 bullet.mesh.material.dispose()
@@ -574,11 +600,22 @@ export class CharacterController {
         return nearestNPC
     }
 
-    startDialogue(npc) {
-        if (!npc) return
+    startDialogue(npc, isAutoQuiz = false) {
+        if (!npc && !isAutoQuiz) return
+
+        // Vérifier si c'est un NPC qui demande le quiz et si le score est insuffisant
+        if (npc && !isAutoQuiz && this.score < 1000) {
+            console.log(`❌ Score insuffisant: ${this.score}/1000. Quiz verrouillé!`)
+            return
+        }
 
         this.nearbyNPC = npc
         this.currentDialogue = this.dialogueManager.getRandomQuestion()
+
+        // Pause les vagues quand le quiz démarre
+        if (this.waveManager && this.waveManager.pauseWaves) {
+            this.waveManager.pauseWaves()
+        }
     }
 
     takeDamage(amount) {

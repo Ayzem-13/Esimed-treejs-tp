@@ -10,7 +10,8 @@ export class WaveManager {
         this.currentWave = 0
         this.waveInProgress = false
         this.timeSinceLastSpawn = 0
-        this.spawnInterval = 1 
+        this.spawnInterval = 1
+        this.isPaused = false 
 
         // vague d'enemies
         this.waveConfigs = [
@@ -40,7 +41,7 @@ export class WaveManager {
     }
 
     update(deltaTime) {
-        if (!this.waveInProgress) return
+        if (!this.waveInProgress || this.isPaused) return
 
         // Vérifier si la vague est terminée (tous les ennemis spawnés et morts)
         const aliveEnemies = this.enemies.filter(e => !e.isDead)
@@ -103,6 +104,20 @@ export class WaveManager {
 
     getAllEnemies() {
         return this.enemies
+    }
+
+    pauseWaves() {
+        this.isPaused = true
+        // Faire disparaître tous les ennemis en les tuant
+        for (const enemy of this.enemies) {
+            if (!enemy.isDead) {
+                enemy.die()  
+            }
+        }
+    }
+
+    resumeWaves() {
+        this.isPaused = false
     }
 
     dispose() {

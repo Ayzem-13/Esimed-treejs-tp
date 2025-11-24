@@ -226,8 +226,8 @@ export class Application {
             this.character.collisionManager
         )
         this.character.setEnemies(this.waveManager.enemies)
+        this.character.setWaveManager(this.waveManager)
     }
-
 
     initCharacter() {
         const spawnPosition = new THREE.Vector3(-10, 1, 5)
@@ -446,7 +446,7 @@ export class Application {
             this.importInput.parentNode.removeChild(this.importInput)
         }
 
-        // Dispose le renderer 
+        // Dispose le renderer
         if (this.renderer) {
             this.renderer.dispose()
         }
