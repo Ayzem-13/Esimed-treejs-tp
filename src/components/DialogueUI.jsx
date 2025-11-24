@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useScene } from '../context/SceneContext';
 
 export function DialogueUI() {
-    const { appInstance, setIsGameOver } = useScene();
+    const { appInstance, setIsGameOver, setIsVictory } = useScene();
     const [isVisible, setIsVisible] = useState(false);
     const [question, setQuestion] = useState('');
     const [answerA, setAnswerA] = useState('');
     const [answerB, setAnswerB] = useState('');
     const [correctAnswer, setCorrectAnswer] = useState('');
+    const [questionIndex, setQuestionIndex] = useState(null);
     const [feedback, setFeedback] = useState('');
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [dialogueShown, setDialogueShown] = useState(false);
@@ -19,12 +20,21 @@ export function DialogueUI() {
                 const dialogue = appInstance.character.currentDialogue;
 
                 if (dialogue && !dialogueShown) {
+                    // Vérifier si c'est une victoire
+                    if (dialogue.victory) {
+                        appInstance.character.currentDialogue = null;
+                        setIsVisible(false);
+                        setIsVictory(true);
+                        return;
+                    }
+
                     setIsVisible(true);
                     setDialogueShown(true);
                     setQuestion(dialogue.question);
                     setAnswerA(dialogue.answerA);
                     setAnswerB(dialogue.answerB);
                     setCorrectAnswer(dialogue.correctAnswer);
+                    setQuestionIndex(dialogue.questionIndex);
                     setFeedback('');
                     setSelectedAnswer(null);
                 } else if (!dialogue) {
@@ -40,13 +50,16 @@ export function DialogueUI() {
         return () => {
             if (frameId) cancelAnimationFrame(frameId);
         };
-    }, [appInstance, dialogueShown]);
+    }, [appInstance, dialogueShown, setIsVictory]);
 
     const handleAnswer = (answer) => {
         setSelectedAnswer(answer);
         const isCorrect = answer === correctAnswer;
 
-        if (!isCorrect) {
+        if (isCorrect) {
+            // Marquer la question comme correctement répondue
+            appInstance.character.dialogueManager.markAsCorrect(questionIndex);
+        } else {
             appInstance.character.wrongAnswerCount++;
         }
 
@@ -61,7 +74,7 @@ export function DialogueUI() {
                         appInstance.character.currentDialogue = null;
                     }
                     if (appInstance?.character?.dialogueManager) {
-                        appInstance.character.dialogueManager.reset();
+                        appInstance.character.dialogueManager.resetSession();
                     }
                     appInstance.character.wrongAnswerCount = 0;
                     setIsVisible(false);
@@ -71,35 +84,64 @@ export function DialogueUI() {
             return;
         }
 
-        // Charger la question suivante après un délai
-        setTimeout(() => {
-            const nextQuestion = appInstance?.character?.dialogueManager?.getRandomQuestion();
-            if (nextQuestion) {
-                appInstance.character.currentDialogue = nextQuestion;
-                setDialogueShown(false);
-            } else {
-                // Toutes les questions ont été répondues
-                setFeedback('Quiz terminé! Bravo!');
-                setTimeout(() => {
-                    if (appInstance?.character?.currentDialogue) {
+        // Charger la question suivante après un délai (SEULEMENT si la réponse était correcte)
+        if (isCorrect) {
+            setTimeout(() => {
+                const nextQuestion = appInstance?.character?.dialogueManager?.getRandomQuestion();
+                if (nextQuestion) {
+                    // Vérifier si c'est une victoire
+                    if (nextQuestion.victory) {
                         appInstance.character.currentDialogue = null;
+                        if (appInstance?.character?.dialogueManager) {
+                            appInstance.character.dialogueManager.resetAll();
+                        }
+                        appInstance.character.wrongAnswerCount = 0;
+                        setIsVisible(false);
+                        setIsVictory(true);
+                    } else {
+                        appInstance.character.currentDialogue = nextQuestion;
+                        setDialogueShown(false);
                     }
-                    if (appInstance?.character?.dialogueManager) {
-                        appInstance.character.dialogueManager.reset();
-                    }
-                    appInstance.character.wrongAnswerCount = 0;
-                    setIsVisible(false);
-                }, 2000);
-            }
-        }, 1500);
+                } else {
+                    // Plus de questions disponibles cette session, fermer le dialogue
+                    setFeedback('Session terminee!');
+                    setTimeout(() => {
+                        if (appInstance?.character?.currentDialogue) {
+                            appInstance.character.currentDialogue = null;
+                        }
+                        if (appInstance?.character?.dialogueManager) {
+                            appInstance.character.dialogueManager.resetSession();
+                        }
+                        appInstance.character.wrongAnswerCount = 0;
+                        setIsVisible(false);
+                    }, 2000);
+                }
+            }, 1500);
+        } else {
+            // Si la réponse est incorrecte, réinitialiser pour permettre une nouvelle tentative
+            setTimeout(() => {
+                setSelectedAnswer(null);
+                setFeedback('');
+            }, 1500);
+        }
     };
 
     if (!isVisible) return null;
+
+    // Afficher la progression
+    const progress = appInstance?.character?.dialogueManager?.getProgress();
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
             <div className="mx-auto max-w-2xl p-4 pointer-events-auto mb-4">
                 <div className="bg-white rounded-lg shadow-lg p-5 border-l-4 border-blue-500">
+                    {/* Progression */}
+                    {progress && (
+                        <div className="mb-3 text-sm text-gray-500">
+                            Questions reussies: {progress.correct}/{progress.total}
+                        </div>
+                    )}
+
                     {/* Question */}
                     <div className="mb-4">
                         <p className="text-gray-900 text-base font-semibold">
@@ -120,7 +162,7 @@ export function DialogueUI() {
                                     : 'bg-gray-100 border-gray-300 text-gray-900 hover:bg-gray-200'
                             } ${feedback ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                            <span className="font-semibold">• {answerA}</span>
+                            <span className="font-semibold">* {answerA}</span>
                         </button>
                         <button
                             onClick={() => !feedback && handleAnswer('B')}
@@ -133,7 +175,7 @@ export function DialogueUI() {
                                     : 'bg-gray-100 border-gray-300 text-gray-900 hover:bg-gray-200'
                             } ${feedback ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                            <span className="font-semibold">• {answerB}</span>
+                            <span className="font-semibold">* {answerB}</span>
                         </button>
                     </div>
 

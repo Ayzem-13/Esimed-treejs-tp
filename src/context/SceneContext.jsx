@@ -12,6 +12,7 @@ export const SceneProvider = ({ children }) => {
     const [isPaused, setIsPaused] = useState(false);
     const [shouldReset, setShouldReset] = useState(false);
     const [isGameOver, setIsGameOver] = useState(false);
+    const [isVictory, setIsVictory] = useState(false);
 
     const resetToMenu = () => {
         if (document.pointerLockElement) {
@@ -20,6 +21,7 @@ export const SceneProvider = ({ children }) => {
         document.body.style.cursor = 'auto';
 
         setIsGameOver(false);
+        setIsVictory(false);
         setIsPaused(false);
         setGameMode(null);
         setMenuClosed(false);
@@ -42,6 +44,8 @@ export const SceneProvider = ({ children }) => {
             setShouldReset,
             isGameOver,
             setIsGameOver,
+            isVictory,
+            setIsVictory,
             resetToMenu
         }}>
             {children}

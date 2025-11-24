@@ -8,6 +8,7 @@ import { Speedometer } from './components/Speedometer';
 import { InteractionPrompt } from './components/InteractionPrompt';
 import { DialogueUI } from './components/DialogueUI';
 import { GameOverScreen } from './components/GameOverScreen';
+import { VictoryScreen } from './components/VictoryScreen';
 import { HealthBar } from './components/HealthBar';
 import { useScene } from './context/SceneContext';
 
@@ -108,6 +109,7 @@ function AppContent() {
       <InteractionPrompt />
       <DialogueUI />
       <GameOverScreen />
+      <VictoryScreen />
       {!isGameOver && (
         <PauseMenu
           isOpen={isPaused}

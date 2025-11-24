@@ -2,7 +2,8 @@ export class DialogueManager {
     constructor() {
         this.questions = [];
         this.isLoaded = false;
-        this.askedQuestions = [];
+        this.correctlyAnswered = []; 
+        this.currentSessionAsked = []; 
         this.loadQuestions();
     }
 
@@ -23,29 +24,61 @@ export class DialogueManager {
             return null;
         }
 
-        // Si toutes les questions ont été posées
-        if (this.askedQuestions.length >= this.questions.length) {
+        if (this.correctlyAnswered.length >= this.questions.length) {
+            return { victory: true };
+        }
+
+        // Trouver les questions disponibles (
+        const availableIndices = this.questions
+            .map((_, idx) => idx)
+            .filter(idx => !this.correctlyAnswered.includes(idx) && !this.currentSessionAsked.includes(idx));
+
+        // Si plus de questions disponibles cette session
+        if (availableIndices.length === 0) {
             return null;
         }
 
-        // Trouver une question non posée
-        let question;
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * this.questions.length);
-            question = this.questions[randomIndex];
-        } while (this.askedQuestions.includes(randomIndex));
+        // Choisir une question aléatoire parmi les disponibles
+        const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        const question = this.questions[randomIndex];
 
-        // Marquer cette question comme posée
-        this.askedQuestions.push(randomIndex);
+        // Marquer comme posée cette session
+        this.currentSessionAsked.push(randomIndex);
 
         return {
             ...question,
+            questionIndex: randomIndex,
             answered: false
         };
     }
 
+    markAsCorrect(questionIndex) {
+        if (!this.correctlyAnswered.includes(questionIndex)) {
+            this.correctlyAnswered.push(questionIndex);
+        }
+    }
+
+    isAllCorrect() {
+        return this.correctlyAnswered.length >= this.questions.length;
+    }
+
+    getProgress() {
+        return {
+            correct: this.correctlyAnswered.length,
+            total: this.questions.length
+        };
+    }
+
+    resetSession() {
+        this.currentSessionAsked = [];
+    }
+
+    resetAll() {
+        this.correctlyAnswered = [];
+        this.currentSessionAsked = [];
+    }
+
     reset() {
-        this.askedQuestions = [];
+        this.resetSession();
     }
 }
