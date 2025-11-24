@@ -11,6 +11,7 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { VictoryScreen } from './components/VictoryScreen';
 import { HealthBar } from './components/HealthBar';
 import { ScoreHUD } from './components/ScoreHUD';
+import { WaveUI } from './components/WaveUI';
 import { useScene } from './context/SceneContext';
 
 function AppContent() {
@@ -108,6 +109,7 @@ function AppContent() {
       <HealthBar />
       <Speedometer />
       <ScoreHUD />
+      <WaveUI />
       <InteractionPrompt />
       <DialogueUI />
       <GameOverScreen />
