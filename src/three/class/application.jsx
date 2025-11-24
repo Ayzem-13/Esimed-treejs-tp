@@ -65,6 +65,9 @@ export class Application {
             this.initCharacter()
             this.initNPCs(this.character.collisionManager)
             this.initWaveManager()
+            if (this.vehicle) {
+                this.waveManager.setVehicle(this.vehicle)
+            }
             this.waveManager.startWave()
         }
 
@@ -240,8 +243,8 @@ export class Application {
         const npc1 = new NPCController(
             this.scene.scene,
             '/models/character/Woman.glb',
-            new THREE.Vector3(5, 0, 10),
-            { scale: 0.4, rotation: 0, width: 0.8, height: 1.8, length: 0.8 },
+            new THREE.Vector3(48, 0, 75),
+            { scale: 0.4, rotation: 4, width: 0.8, height: 1.8, length: 0.8 },
             collisionManager
         )
         this.npcs.push(npc1)

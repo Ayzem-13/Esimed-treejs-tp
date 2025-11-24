@@ -6,6 +6,7 @@ export class WaveManager {
         this.scene = scene
         this.character = character
         this.collisionManager = collisionManager
+        this.vehicle = null
         this.enemies = []
         this.currentWave = 0
         this.waveInProgress = false
@@ -13,16 +14,16 @@ export class WaveManager {
         this.spawnInterval = 1
         this.isPaused = false 
 
-        // vague d'enemies
+        // vague d'enemies (doublé)
         this.waveConfigs = [
-            { count: 7 },   
-            { count: 10 }, 
-            { count: 15 }, 
-            { count: 20 },  // Vague 4+: 20 ennemis (bloqué)
+            { count: 14 },
+            { count: 20 },
+            { count: 30 },
+            { count: 40 },  // Vague 4+: 40 ennemis (bloqué)
         ]
 
-        // Zone de spawn 
-        this.spawnRadius = 50
+
+        this.spawnRadius = 30
         this.spawnHeight = 0.5
     }
 
@@ -93,6 +94,9 @@ export class WaveManager {
             this.collisionManager
         )
         zombie.setTargetCharacter(this.character)
+        if (this.vehicle) {
+            zombie.setTargetVehicle(this.vehicle)
+        }
         this.enemies.push(zombie)
 
         // console.log(`%c[Vague ${this.currentWave}] Zombie ${this.enemiesSpawned + 1}/${this.enemiesToSpawn}`, 'color: #00CCFF;')
@@ -118,6 +122,13 @@ export class WaveManager {
 
     resumeWaves() {
         this.isPaused = false
+    }
+
+    setVehicle(vehicle) {
+        this.vehicle = vehicle
+        for (const enemy of this.enemies) {
+            enemy.setTargetVehicle(vehicle)
+        }
     }
 
     dispose() {

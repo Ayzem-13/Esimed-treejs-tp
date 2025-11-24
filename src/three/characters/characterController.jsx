@@ -474,6 +474,12 @@ export class CharacterController {
     enterVehicle() {
         if (!this.vehicle || this.inVehicle) return
 
+        if (this.score < 1000) {
+            console.log(`Score insuffisant: ${this.score}/1000. Vehicule verrouille`)
+            return
+        }
+        this.score -= 1000
+
         this.inVehicle = true
         this.body.visible = false
         this.vehicle.show()
@@ -604,8 +610,8 @@ export class CharacterController {
         if (!npc && !isAutoQuiz) return
 
         // Vérifier si c'est un NPC qui demande le quiz et si le score est insuffisant
-        if (npc && !isAutoQuiz && this.score < 1000) {
-            console.log(`❌ Score insuffisant: ${this.score}/1000. Quiz verrouillé!`)
+        if (npc && !isAutoQuiz && this.score < 2500) {
+            console.log(`❌ Score insuffisant: ${this.score}/2500. Quiz verrouillé!`)
             return
         }
 
