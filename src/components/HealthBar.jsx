@@ -26,7 +26,8 @@ export function HealthBar() {
         return () => clearInterval(intervalId);
     }, [appInstance, gameMode, health, maxHealth]);
 
-    if (!appInstance || !appInstance.character || gameMode !== 'character') return null;
+    if (gameMode !== 'character') return null;
+    if (!appInstance?.character) return null;
 
     const healthPercent = (health / maxHealth) * 100;
 

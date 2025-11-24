@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useScene } from '../context/SceneContext';
 
 export function DialogueUI() {
-    const { appInstance, setIsGameOver, setIsVictory } = useScene();
+    const { appInstance, setIsGameOver, setIsVictory, gameMode } = useScene();
     const [isVisible, setIsVisible] = useState(false);
     const [question, setQuestion] = useState('');
     const [answerA, setAnswerA] = useState('');
@@ -12,6 +12,18 @@ export function DialogueUI() {
     const [feedback, setFeedback] = useState('');
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [dialogueShown, setDialogueShown] = useState(false);
+
+    useEffect(() => {
+        if (gameMode !== 'character') {
+            setIsVisible(false);
+            setDialogueShown(false);
+            setQuestion('');
+            setAnswerA('');
+            setAnswerB('');
+            setFeedback('');
+            setSelectedAnswer(null);
+        }
+    }, [gameMode]);
 
     useEffect(() => {
         let frameId;

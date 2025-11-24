@@ -2,12 +2,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useScene } from '../context/SceneContext';
 
 export function ScoreHUD() {
-    const { appInstance } = useScene();
+    const { appInstance, gameMode } = useScene();
     const [score, setScore] = useState(0);
     const [forceUpdate, setForceUpdate] = useState(0);
 
     useEffect(() => {
-        if (!appInstance) {
+        if (gameMode !== 'character' || !appInstance?.character) {
             return;
         }
 
@@ -23,10 +23,13 @@ export function ScoreHUD() {
 
         const intervalId = setInterval(checkScore, 100);
         return () => clearInterval(intervalId);
-    }, [appInstance, score]);
+    }, [appInstance, gameMode, score]);
+
+    if (gameMode !== 'character') return null;
+    if (!appInstance?.character) return null;
 
     return (
-        <div 
+        <div
             key={forceUpdate}
             className="fixed top-5 right-5 bg-black/70 text-white px-4 py-2 rounded font-mono text-base"
         >
